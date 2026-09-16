@@ -1,0 +1,60 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment files
+.env
+.env.*
+!.env.example
+supabase/.env*
+
+# Local Supabase CLI scratch state (per-machine, never shared)
+supabase/.branches/
+supabase/.temp/
+
+!supabase/.env.preview
+# Deploy secrets
+.env.deploy
+
+# Backup/temp files
+*~
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.dianoisis/
+
+# Playwright
+.auth/
+
+# Fly.io
+fly.toml
+.dockerignore
+
+# Python bytecode (scripts/ has a few CI helpers)
+__pycache__/
+*.pyc
+
+# `tsc -b` (npm run typecheck) writes incremental build state next to each
+# referenced tsconfig. Nothing consumes it outside the local run.
+*.tsbuildinfo
+
+# gstack browse/skill session artifacts (machine-local)
+.gstack/

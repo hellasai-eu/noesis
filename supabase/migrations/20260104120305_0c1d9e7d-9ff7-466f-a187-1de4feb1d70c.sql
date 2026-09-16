@@ -1,0 +1,1 @@
+ALTER TABLE quizzes ADD COLUMN show_answers boolean NOT NULL DEFAULT false;

@@ -1,0 +1,37 @@
+{
+  "actions": {
+    "save": "Αποθήκευση",
+    "saving": "Αποθήκευση…",
+    "clear": "Καθαρισμός",
+    "signOut": "Αποσύνδεση",
+    "contactUs": "Επικοινωνία",
+    "changePassword": "Αλλαγή κωδικού",
+    "twoFactorAuth": "Έλεγχος δύο παραγόντων"
+  },
+  "institution": {
+    "fallbackName": "Ίδρυμα",
+    "yours": "Τα ιδρύματά σας",
+    "browseAll": "Όλα τα ιδρύματα"
+  },
+  "language": {
+    "label": "Γλώσσα",
+    "change": "Αλλαγή γλώσσας"
+  },
+  "course": {
+    "noDescription": "Χωρίς περιγραφή"
+  },
+  "difficulty": {
+    "all": "Όλες",
+    "easy": "Εύκολη",
+    "medium": "Μεσαία",
+    "hard": "Δύσκολη"
+  },
+  "chat": {
+    "keyboardHint": "Enter για αποστολή · Shift+Enter για νέα γραμμή",
+    "charCount": "{{current}} / {{max}}",
+    "overLimit": "{{over}} χαρακτήρες πάνω από το όριο των {{max}} χαρακτήρων — συντομεύστε το μήνυμά σας για να το στείλετε.",
+    "tooLongToast": "Το μήνυμά σας είναι πολύ μεγάλο ({{length}} χαρακτήρες). Συντομεύστε το στους {{max}} χαρακτήρες ή λιγότερους.",
+    "instructor": "Καθηγητής",
+    "instructorNamed": "{{name}} · Καθηγητής"
+  }
+}

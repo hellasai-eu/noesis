@@ -1,0 +1,83 @@
+# Security scanning (compliance pack G7, phase 1).
+#
+# Two scans. Neither needs a credential or a deployed environment, which is the
+# guarantee that matters here — though "hermetic" would be too strong for the
+# dependency audit, which reaches the npm registry for advisory data:
+#  - secret-scan: gitleaks over the full history, every PR/push + weekly.
+#    Allowlists live in .gitleaks.toml / .gitleaksignore — narrow, value- or
+#    fingerprint-specific, each classified in the operator's private
+#    security-testing record. Note that they are scoped to *history*: a path
+#    that has left the working tree still needs its entry while the commits
+#    that carried it remain.
+#  - dependency-audit: `npm audit` gated at high/critical via
+#    scripts/npm_audit_gate.py (the reviewed exception list lives there).
+#    Dependabot (.github/dependabot.yml) is the paired fix pipeline.
+#
+# The dynamic scans that need a running deployment — the ZAP baseline and the
+# adversarial suite — belong to the deployment repository.
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # Full history: a secret committed and then deleted is still leaked.
+          fetch-depth: 0
+
+      # The pinned binary, not gitleaks-action: the action calls the PR API
+      # (403 under this workflow's read-only token) and scans only PR commits
+      # on pull_request events — this job wants the whole history every time,
+      # with no GitHub API surface. Version + checksum pinned together.
+      - name: Install gitleaks
+        run: |
+          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+          rm gitleaks.tar.gz gitleaks
+
+      # HEAD only, not --all (gitleaks' default): with fetch-depth 0 the
+      # checkout carries every branch, so an --all scan judges OTHER branches'
+      # commits against THIS branch's .gitleaks.toml — a branch that adds a
+      # fixture plus its allowlist entry fails every sibling PR until it
+      # merges (observed on #1424, failed by #1421's canary fixtures). The
+      # weekly/push runs on main still cover everything that merges. -v so a
+      # failure's log names the finding instead of just a count.
+      - name: Run gitleaks (full history of this branch)
+        run: gitleaks git --no-banner --redact -v --log-opts="--full-history HEAD" .
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      # Works from package-lock.json + the registry — no `npm ci` needed.
+      - name: Gate on high/critical advisories
+        run: python3 scripts/npm_audit_gate.py
+
+  # Weekly + manual only: a passive scan of the deployed production frontend
+  # tests what is live, not what a PR proposes, so per-PR runs would only
+  # repeat the same result while adding ~5 minutes to every PR.

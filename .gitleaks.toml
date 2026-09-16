@@ -1,0 +1,42 @@
+# Gitleaks configuration — extends the default ruleset with allowlists for the
+# non-secrets a full-history scan of this repository trips over (2026-09-14
+# baseline: 10 findings, every one a public constant or a test fixture, each
+# classified in the operator's private security-testing record). Keep
+# allowlists NARROW: a value-specific
+# regex or a single fingerprint in .gitleaksignore, never a blanket path like
+# "**/*.test.ts" — a real secret pasted into a test must still fail the scan.
+
+title = "dianoisis gitleaks config"
+
+[extend]
+useDefault = true
+
+# Supabase local-development demo JWTs (iss=supabase-demo). These are public
+# constants that ship with the Supabase CLI and only work against a local
+# stack — supabase/tests/rls/helpers/auth.ts and test fixtures embed them as
+# defaults. The regex is anchored to the demo issuer so a JWT minted for a
+# hosted project (iss=supabase, with a project ref) still gets flagged.
+[[allowlists]]
+description = "Supabase CLI local demo JWTs (public constants, local stack only)"
+regexes = ['''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZS1kZW1v''']
+
+# supabase/functions/_shared/youtube.ts embeds YouTube's InnerTube web API
+# key — the key youtube.com itself sends to every browser. Deliberately
+# public; scoped to lines that name the constant so an actual GCP key
+# elsewhere still fails.
+[[allowlists]]
+description = "YouTube InnerTube public web API key"
+regexTarget = "line"
+regexes = ['''INNERTUBE_KEY''']
+
+# The log-redaction test suite exists to prove fake credentials get redacted,
+# so the file is fake secrets by construction.
+[[allowlists]]
+description = "Deliberately fake secrets exercising the log-redaction chokepoint"
+paths = ['''supabase/functions/_shared/__tests__/logger-redaction\.test\.ts''']
+
+# Fixed TOTP secret that supabase/seed.sql enrols for the e2e-mfa@test.local
+# local test account — a fixture, not a credential.
+[[allowlists]]
+description = "Seeded TOTP secret in supabase/seed.sql"
+regexes = ['''GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ''']

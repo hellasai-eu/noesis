@@ -1,0 +1,230 @@
+[db.seed]
+# Run seed.sql on every Supabase branch (local reset + preview branches).
+# seed.sql creates the local test accounts (e2e-*@test.local / testpass123).
+#
+# sql_paths entries are resolved relative to this file's directory (supabase/),
+# so "seed.sql" → supabase/seed.sql. This is the standard Supabase CLI
+# convention and matches what `supabase db reset` uses locally.
+enabled = true
+sql_paths = ["seed.sql"]
+
+[api]
+enabled = true
+
+# Opt-in TOTP MFA (authenticator apps). Hosted production has TOTP enabled by
+# default and is dashboard-managed; this block pins the same behaviour for the
+# local stack and preview branches so the enroll/challenge flows and the
+# mfa-totp E2E spec work there too. Phone/SMS factors stay off.
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+# JWT verification is disabled at the gateway for every function below but the
+# first, so an unauthenticated request reaches the handler and the handler's own
+# check is the only access boundary. Not all of them have one — supabase/functions/AUTHORIZATION.md
+# records which do, and #1135/#1136/#1137 track closing the rest.
+#
+# Turning this back on is not the fix: the anon key ships in the frontend bundle
+# and satisfies the gateway check, so it gates nothing. See AUTHORIZATION.md.
+
+# The one function without an explicit setting until now: it inherited the CLI
+# default of true, so unlike every other function it does have a gateway check.
+# Stated here so the exception is visible rather than inferred from an absence.
+# Its only caller is the browser (AcademicYearRolloverDialog), which always
+# sends a session JWT, so this is the behaviour that was already deployed.
+[functions.academic-year-rollover]
+verify_jwt = true
+
+[functions.accept-invitation]
+verify_jwt = false
+
+[functions.admin-reset-user-mfa]
+verify_jwt = false
+
+[functions.admin-set-user-password]
+verify_jwt = false
+
+[functions.analyze-quiz]
+verify_jwt = false
+
+[functions.analyze-study-guide]
+verify_jwt = false
+
+[functions.bulk-invite-users]
+verify_jwt = false
+
+[functions.cancel-job]
+verify_jwt = false
+
+[functions.check-question-similarity]
+verify_jwt = false
+
+[functions.check-vector-store-file]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
+
+[functions.chat-stream]
+verify_jwt = false
+
+[functions.cluster-students-by-performance]
+verify_jwt = false
+
+[functions.convert-md-to-pdf]
+verify_jwt = false
+
+[functions.convert-html-to-pdf]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = false
+
+[functions.delete-from-openai]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.derive-group-weaknesses]
+verify_jwt = false
+
+[functions.detect-chapters]
+verify_jwt = false
+
+[functions.enqueue-bulk-generation]
+verify_jwt = false
+
+[functions.enqueue-followup-practice]
+verify_jwt = false
+
+[functions.generate-study-guide-outline]
+verify_jwt = false
+
+[functions.generate-study-guide-theory]
+verify_jwt = false
+
+[functions.generate-study-guide-questions]
+verify_jwt = false
+
+[functions.export-data]
+verify_jwt = false
+
+[functions.extract-competencies]
+verify_jwt = false
+
+[functions.extract-images-from-pdf]
+verify_jwt = false
+
+[functions.fetch-url-content]
+verify_jwt = false
+
+[functions.generate-chapter-summary]
+verify_jwt = false
+
+[functions.generate-cheatsheet]
+verify_jwt = false
+
+[functions.generate-evaluation-timeline]
+verify_jwt = false
+
+[functions.generate-flashcards]
+verify_jwt = false
+
+[functions.generate-fill-gaps-questions]
+verify_jwt = false
+
+[functions.generate-ordering-questions]
+verify_jwt = false
+
+[functions.generate-classification-questions]
+verify_jwt = false
+
+[functions.generate-open-questions]
+verify_jwt = false
+
+[functions.generate-pdf-thumbnail]
+verify_jwt = false
+
+[functions.generate-questions]
+verify_jwt = false
+
+[functions.generate-student-evaluation]
+verify_jwt = false
+
+[functions.generate-student-questions]
+verify_jwt = false
+
+[functions.generate-study-image]
+verify_jwt = false
+
+[functions.manage-vector-store]
+verify_jwt = false
+
+[functions.moderate-study-image]
+verify_jwt = false
+
+[functions.notify-password-changed]
+verify_jwt = false
+
+[functions.send-contact-form]
+verify_jwt = false
+
+[functions.send-invitation]
+verify_jwt = false
+
+[functions.submit-open-answer]
+verify_jwt = false
+
+[functions.grade-deterministic-answer]
+verify_jwt = false
+
+[functions.submit-study-guide-piece]
+verify_jwt = false
+
+[functions.submit-quiz-answers]
+verify_jwt = false
+
+# Necessarily unauthenticated: it is called precisely when authentication has
+# just failed, so there is no JWT to verify. The handler never reveals whether
+# the address exists — see its header.
+[functions.record-login-attempt]
+verify_jwt = false
+
+[functions.reset-open-question-progress]
+verify_jwt = false
+
+[functions.resume-job]
+verify_jwt = false
+
+[functions.retry-job]
+verify_jwt = false
+
+[functions.run-jobs]
+verify_jwt = false
+
+[functions.split-chapters]
+verify_jwt = false
+
+[functions.suggest-tutoring-sessions]
+verify_jwt = false
+
+[functions.upload-to-openai]
+verify_jwt = false
+
+[functions.validate-questions]
+verify_jwt = false
+
+# Provide OPENAI_API_KEY to Edge Functions on every Supabase branch. The value is
+# stored ENCRYPTED in supabase/.env.preview (committed) and decrypted at branch
+# deploy time using DOTENV_PRIVATE_KEY_PREVIEW (a project secret on the parent
+# project). config.toml syncs to all branches, so this exposes the secret to each
+# preview branch's function runtime. Prod sets OPENAI_API_KEY via its own project
+# secret independently.
+[edge_runtime.secrets]
+OPENAI_API_KEY = "env(OPENAI_API_KEY)"
+RESEND_API_KEY = "env(RESEND_API_KEY)"
+CONVERT_API_KEY = "env(CONVERT_API_KEY)"

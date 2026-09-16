@@ -1,0 +1,361 @@
+@import '@fontsource/playfair-display/400.css';
+@import '@fontsource/playfair-display/500.css';
+@import '@fontsource/playfair-display/600.css';
+@import '@fontsource/playfair-display/700.css';
+@import '@fontsource/dm-sans/400.css';
+@import '@fontsource/dm-sans/500.css';
+@import '@fontsource/dm-sans/600.css';
+@import '@fontsource/dm-sans/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Navy-based scholarly palette */
+    --background: 40 30% 98%;
+    --foreground: 220 40% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 40% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 40% 13%;
+
+    /* Deep navy primary */
+    --primary: 215 50% 23%;
+    --primary-foreground: 40 30% 98%;
+
+    /* Warm cream secondary */
+    --secondary: 40 30% 94%;
+    --secondary-foreground: 220 40% 13%;
+
+    /* Muted tones */
+    --muted: 40 20% 92%;
+    --muted-foreground: 220 15% 45%;
+
+    /* Gold accent */
+    --accent: 38 80% 55%;
+    --accent-foreground: 220 40% 13%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 215 50% 23%;
+
+    --radius: 0.625rem;
+
+    /* Custom colors */
+    --navy: 215 50% 23%;
+    --navy-light: 215 45% 35%;
+    --navy-dark: 215 55% 15%;
+    --gold: 38 80% 55%;
+    --gold-light: 38 75% 70%;
+    --gold-dark: 38 85% 40%;
+    --cream: 40 30% 98%;
+    --cream-dark: 40 25% 92%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(215 50% 23%) 0%, hsl(215 55% 15%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(38 80% 55%) 0%, hsl(38 85% 40%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 30% 98%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 40% 13% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 40% 13% / 0.08), 0 2px 4px -2px hsl(220 40% 13% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(220 40% 13% / 0.1), 0 4px 6px -4px hsl(220 40% 13% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(220 40% 13% / 0.1), 0 8px 10px -6px hsl(220 40% 13% / 0.05);
+    --shadow-gold: 0 4px 14px 0 hsl(38 80% 55% / 0.35);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Subject palette — one hue per course on the student surface.
+       Six hues at matched chroma so no course reads as more important than
+       another; `src/lib/subject-colors.ts` assigns them from the course id.
+       `-ink` is the text weight (>= 4.5:1 on --card), `-solid` the fill,
+       `-tint` the wash behind an icon chip. Not Tailwind tokens on purpose:
+       the hue is chosen at runtime, which no static class can express. */
+    --subject-1: #EE6C55;
+    --subject-1-ink: #B4402C;
+    --subject-1-tint: rgba(238, 108, 85, 0.14);
+    --subject-1-hero: #B4402C;
+    --subject-2: #4C86C9;
+    --subject-2-ink: #2F5F94;
+    --subject-2-tint: rgba(76, 134, 201, 0.14);
+    --subject-2-hero: #2F5F94;
+    --subject-3: #4FA97A;
+    --subject-3-ink: #2F7350;
+    --subject-3-tint: rgba(79, 169, 122, 0.15);
+    --subject-3-hero: #2F7350;
+    --subject-4: #A86BAC;
+    --subject-4-ink: #6F4E93;
+    --subject-4-tint: rgba(168, 107, 172, 0.16);
+    --subject-4-hero: #6F4E93;
+    --subject-5: #E8A531;
+    --subject-5-ink: #8F6109;
+    --subject-5-tint: rgba(232, 165, 49, 0.18);
+    --subject-5-hero: #8F6109;
+    --subject-6: #3BA3A0;
+    --subject-6-ink: #23716F;
+    --subject-6-tint: rgba(59, 163, 160, 0.16);
+    --subject-6-hero: #23716F;
+    /* Text on a `-hero` fill. The saturated mid-tone of each hue carries
+       neither white nor near-black at 4.5:1, so the hero tile is filled with
+       the deeper `-ink` weight and takes the light foreground here; the dark
+       theme inverts both halves rather than reusing either. */
+    --subject-hero-fg: #FFFFFF;
+  }
+
+  .dark {
+    --background: 220 40% 8%;
+    --foreground: 40 30% 96%;
+
+    --card: 220 40% 12%;
+    --card-foreground: 40 30% 96%;
+
+    --popover: 220 40% 12%;
+    --popover-foreground: 40 30% 96%;
+
+    --primary: 38 80% 55%;
+    --primary-foreground: 220 40% 8%;
+
+    --secondary: 220 30% 18%;
+    --secondary-foreground: 40 30% 96%;
+
+    --muted: 220 30% 18%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 215 45% 35%;
+    --accent-foreground: 40 30% 96%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 30% 20%;
+    --input: 220 30% 20%;
+    --ring: 38 80% 55%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Same six hues, lifted for a dark ground: the light `-ink` values are
+       chosen against white and go muddy on navy, so each is replaced rather
+       than reused. Fills stay close to the light ones so a course keeps its
+       identity across themes. */
+    --subject-1: #FF7C63;
+    --subject-1-ink: #FF9A85;
+    --subject-1-tint: rgba(255, 124, 99, 0.18);
+    --subject-1-hero: #FF9A85;
+    --subject-2: #5C9BE0;
+    --subject-2-ink: #8CBBEC;
+    --subject-2-tint: rgba(92, 155, 224, 0.18);
+    --subject-2-hero: #8CBBEC;
+    --subject-3: #56C08D;
+    --subject-3-ink: #7FD3AB;
+    --subject-3-tint: rgba(86, 192, 141, 0.18);
+    --subject-3-hero: #7FD3AB;
+    --subject-4: #C182C6;
+    --subject-4-ink: #D2A0D6;
+    --subject-4-tint: rgba(193, 130, 198, 0.20);
+    --subject-4-hero: #D2A0D6;
+    --subject-5: #F2C46B;
+    --subject-5-ink: #F2C46B;
+    --subject-5-tint: rgba(242, 196, 107, 0.18);
+    --subject-5-hero: #F2C46B;
+    --subject-6: #4CBEBA;
+    --subject-6-ink: #6FD3D0;
+    --subject-6-tint: rgba(76, 190, 186, 0.18);
+    --subject-6-hero: #6FD3D0;
+    /* Inverted: on navy the hero fill is the light weight, so its text is the
+       page's darkest ground rather than white. */
+    --subject-hero-fg: #0F1B2C;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .shadow-elegant {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+}
+
+@layer components {
+  /*
+    Images inside authored content (#1217).
+
+    Every surface that shows author-written HTML — the visual editor, the
+    preview beside it, the study-guide player a student reads — wraps it in
+    `.prose`, so ONE rule here bounds the image everywhere instead of three
+    that drift. The upload path downscales to 1200x900 (see editor-images.ts);
+    this is what keeps a 1200px-wide diagram from towering over the ~600px
+    column it is dropped into.
+
+    Both axes are capped with `auto` on width and height, which is what lets
+    the browser keep the aspect ratio: it scales the image down until both
+    bounds are satisfied rather than squashing it to fit.
+  */
+  .prose img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 24rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ProseMirror marks the node the caret is on; without this an image is the
+     one thing in the editor you cannot see you have selected. */
+  .ProseMirror img.ProseMirror-selectednode {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  /* Marks the spot an image is uploading into, so the author can see both that
+     something is happening and exactly where it will land. */
+  .editor-image-placeholder {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border: 1px dashed hsl(var(--border));
+    border-radius: 0.375rem;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    vertical-align: middle;
+    user-select: none;
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* MathML styling - ensure proper inline rendering */
+  math {
+    display: inline;
+    font-family: 'Times New Roman', 'Latin Modern Math', serif;
+  }
+  
+  math * {
+    display: inline;
+  }
+  
+  mfrac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+  }
+  
+  msup, msub, msubsup {
+    display: inline;
+  }
+  
+  mrow {
+    display: inline;
+  }
+
+  /* Flashcard flip animation utilities */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-style-preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}

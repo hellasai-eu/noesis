@@ -1,0 +1,38 @@
+{
+  "loading": "Loading study guide…",
+  "backToCourse": "Back to course",
+  "progress_one": "{{completed}} of {{count}} piece completed",
+  "progress_other": "{{completed}} of {{count}} pieces completed",
+  "complete": "Complete",
+  "noPieces": "This study guide has no pieces yet.",
+  "piece": {
+    "done": "Done",
+    "inProgress": "In progress",
+    "locked": "Locked",
+    "unanswered_one": "Answer every question to submit — {{count}} still unanswered.",
+    "unanswered_other": "Answer every question to submit — {{count}} still unanswered.",
+    "submitting": "Submitting…",
+    "submit": "Submit piece"
+  },
+  "theory": "Theory",
+  "feedback": {
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "grade": "Grade: {{grade}}/100",
+    "strengths": "Strengths",
+    "areasForImprovement": "Areas for improvement",
+    "pendingReview": "Pending teacher review"
+  },
+  "toast": {
+    "unavailable": "This study guide is no longer available.",
+    "loadFailed": "Could not load this study guide.",
+    "alreadySubmitted": "You've already submitted this piece.",
+    "moderationFlagged": "An answer was flagged by moderation. Please contact your instructor.",
+    "savedButStale": "Your answers were saved, but the next piece could not be loaded. Please refresh the page.",
+    "guideComplete": "Study guide complete!",
+    "pieceSubmitted": "Piece submitted — the next piece is unlocked.",
+    "submitFailed": "Could not submit this piece.",
+    "notAuthenticated": "You are signed out. Please sign in again.",
+    "submitRejected": "The server rejected this submission."
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "nav": {
+    "backToCourse": "Back to Course",
+    "returnToCourse": "Return to Course",
+    "exitQuiz": "Exit Quiz",
+    "continueLearning": "Continue Learning"
+  },
+  "setup": {
+    "title": "Answer Questions",
+    "includeAnswered": "Include answered questions",
+    "includeAnsweredHint": "Review questions you've already answered",
+    "start": "Start"
+  },
+  "closed": {
+    "title": "Quiz Closed",
+    "body": "Your instructor has marked this quiz as done. New attempts can no longer be started."
+  },
+  "timedStart": {
+    "title": "Ready to start?",
+    "warning": "This quiz has a <1>{{count}}-minute</1> time limit. Once you start, the timer <2>cannot be paused or stopped</2>, even if you close the tab. Make sure you're ready before beginning.",
+    "cancel": "Cancel",
+    "starting": "Starting…",
+    "confirm": "I'm ready, start the quiz"
+  },
+  "abandoned": {
+    "title": "Quiz Unavailable",
+    "body": "This timed quiz was exited before completion and cannot be resumed. Once a timed quiz is started, it must be completed in one session."
+  },
+  "empty": {
+    "title": "All Caught Up!",
+    "bodyIncludingAnswered": "No questions available for this course yet.",
+    "bodyUnanswered": "You've answered all available practice questions for this course.",
+    "generatePrompt": "Want more practice? Generate your own questions from any chapter.",
+    "generateAction": "Generate Your Own Questions",
+    "checkBackLater": "Check back later for new questions, or contact your instructor."
+  },
+  "submitted": {
+    "title": "Quiz Submitted!",
+    "subtitle": "Your answers have been recorded",
+    "pendingRelease": "Your score and correct answers will be available once your instructor releases the results.",
+    "answeredCount_one": "You answered <1>{{count}}</1> question.",
+    "answeredCount_other": "You answered <1>{{count}}</1> questions."
+  },
+  "results": {
+    "titleQuiz": "Quiz Complete!",
+    "titleRound": "Round Complete!",
+    "subtitleQuiz": "Great job on completing this quiz session",
+    "subtitleRound": "Great job on completing this round",
+    "questions": "Questions",
+    "correct": "Correct",
+    "wrong": "Wrong",
+    "accuracy": "Accuracy",
+    "excellent": "🎉 Excellent work!"
+  },
+  "exitDialog": {
+    "title": "Exit Timed Quiz?",
+    "warningLabel": "Warning:",
+    "warningBody": "If you exit now, you will <1>not be able to resume</1> and your progress will be lost.",
+    "timeRemaining": "Time remaining:",
+    "timeExpired": "Time has expired",
+    "continue": "Continue Quiz",
+    "exitAnyway": "Exit Anyway",
+    "timeExpiredBody": "<1>Time has expired</1>, but you can still submit your answers."
+  },
+  "header": {
+    "expired": "Expired",
+    "progress": "Question {{current}} of {{total}}"
+  },
+  "expiredBanner": {
+    "title": "Time has expired",
+    "body": "You can still review your answers and submit when ready."
+  },
+  "question": {
+    "index": "Question {{index}}",
+    "peer": "Peer",
+    "previouslyAnswered": "Previously answered",
+    "previouslyCorrect": "Previously answered: Correct",
+    "previouslyIncorrect": "Previously answered: Incorrect",
+    "unrenderable": "This question can't be displayed for this attempt. It may have been started before this question type was supported, or the question has since been removed. Please restart the quiz to continue.",
+    "explanation": "Explanation",
+    "answerRecorded": "Your answer has been recorded",
+    "priorCorrect": "You answered this correctly before.",
+    "priorIncorrect": "You got this wrong last time."
+  },
+  "vote": {
+    "prompt": "Was this question helpful?",
+    "helpful": "Helpful",
+    "issue": "Issue"
+  },
+  "navigator": {
+    "allAnswered": "All answered",
+    "answered_one": "{{answered}} of {{count}} answered",
+    "answered_other": "{{answered}} of {{count}} answered"
+  },
+  "actions": {
+    "previous": "Previous",
+    "skip": "Skip for now",
+    "saveAndNext": "Save & Next",
+    "next": "Next",
+    "submitQuiz": "Submit Quiz",
+    "submitAnswer": "Submit Answer",
+    "nextQuestion": "Next Question",
+    "finishQuiz": "Finish Quiz",
+    "finishRound": "Finish Round"
+  },
+  "submitDialog": {
+    "title": "Submit Quiz?",
+    "unanswered_one": "You have {{count}} unanswered question. Are you sure you want to submit?",
+    "unanswered_other": "You have {{count}} unanswered questions. Are you sure you want to submit?",
+    "allAnswered": "You have answered all questions. Ready to submit your quiz?",
+    "review": "Review Answers"
+  },
+  "graceDialog": {
+    "title": "Time's up",
+    "body_one": "Your time limit has been reached. Your answers will be submitted automatically in <1>{{count}} second</1>. You can submit now, or wait for auto-submit.",
+    "submitting": "Submitting…",
+    "submitNow": "Submit now",
+    "body_other": "Your time limit has been reached. Your answers will be submitted automatically in <1>{{count}} seconds</1>. You can submit now, or wait for auto-submit."
+  },
+  "toast": {
+    "voteFailed": "Failed to save vote",
+    "loadQuizFailed": "Failed to load quiz",
+    "startFailed": "Failed to start quiz. Please try again.",
+    "loadQuestionsFailed": "Failed to load questions",
+    "autoSubmitFailed": "Failed to auto-submit. Please contact your instructor.",
+    "attemptUnidentified": "This attempt could not be identified. Please reload the quiz.",
+    "saveAnswerFailed": "Failed to save answer",
+    "finalisedByInstructor": "This quiz has been finalised by your instructor",
+    "submitSuccess": "Quiz submitted successfully!",
+    "answerAll_one": "Please answer all questions. {{count}} question remaining.",
+    "answerAll_other": "Please answer all questions. {{count}} questions remaining.",
+    "voteRemoved": "Vote removed",
+    "voteThanks": "Thanks for your feedback!",
+    "submitQuizFailed": "Failed to submit quiz. Please try again.",
+    "questionChanged": "A question was edited while your answers were being graded. Please try again."
+  },
+  "fields": {
+    "classificationGroup": "Classification",
+    "orderingGroup": "Ordering",
+    "keepThisOrder": "Keep this order",
+    "correctOrder": "Correct order",
+    "expectedAnswers": "Expected answers",
+    "gap": "Gap {{ordinal}}",
+    "gapLabel": "Gap {{ordinal}}:",
+    "yourAnswer": "Your answer",
+    "answerPlaceholder": "Write your answer here...",
+    "noAnswer": "(no answer)",
+    "classificationBroken": "This classification question is missing its items or categories and can't be answered. Please contact your instructor.",
+    "orderingBroken": "This ordering question is missing its items and can't be answered. Please contact your instructor.",
+    "fillGapsBroken": "This fill-the-gaps question is missing its blanks and can't be answered. Please ask your instructor to remove or replace it.",
+    "dragItem": "Drag item at position {{position}}",
+    "shuffledHint": "This order was shuffled for you — drag the items into the order you want, or keep this one.",
+    "openRecorded": "Open answers are recorded for your instructor to review.",
+    "openWillRecord": "Your answer will be recorded for your instructor to review.",
+    "alsoAccepted": "(also accepted: {{answers}})"
+  }
+}

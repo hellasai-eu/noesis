@@ -1,0 +1,35 @@
+# Dependabot: security updates land as PRs the moment an advisory affects a
+# locked dependency; version updates run weekly, grouped so the routine
+# minor/patch churn arrives as one PR instead of twenty. Every PR runs the
+# full CI gate (lint, typecheck, unit, build, smoke), so a bad bump fails
+# visibly rather than merging.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Athens
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    # Majors are deliberate migrations (Vite 8, react-router 7 are known
+    # pending ones) — surface them as Dependabot alerts / audit findings, not
+    # as auto-PRs that will fail CI and linger.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Athens
+    open-pull-requests-limit: 5

@@ -1,0 +1,247 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1-5'
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # Catches the silent failure mode from PR #527 — two migrations sharing a
+      # version prefix means Supabase skips the second one. Fail-fast before
+      # paying for node/npm setup.
+      - name: Check migration version uniqueness
+        run: ./scripts/check-migration-versions.sh
+
+      # Guards against the recurring "flex-column dialog whose body doesn't
+      # scroll" regression (#843, #849, #850, #862).
+      - name: Check dialog scroll bodies
+        run: ./scripts/check-dialog-scroll.sh
+
+      # A guard function that counts study_guide_answers must be SECURITY
+      # DEFINER (or its count is RLS-scoped while the write it guards is not)
+      # and must lock before counting (or a concurrent submission slips between
+      # the count and the delete). Both were violated in review after being
+      # written down — #991 round 6, #997 rounds 1-3. Dependency-free, so it
+      # runs before `npm ci` alongside the other static guards.
+      - name: Check submissions-guard SQL invariants
+        run: ./scripts/check-guard-functions.sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      # `tsc -b`, not `tsc --noEmit`. The root tsconfig is solution-style
+      # (`"files": []` plus references), so the plain command compiles an
+      # empty file list and always exits 0 — this step passed for the life of
+      # the repo without checking anything.
+      - name: Run TypeScript type check
+        run: npm run typecheck
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.6.3
+
+      # Reuse the downloaded remote modules (supabase-js, resend, openai from
+      # esm.sh) across runs so a green run isn't at the mercy of esm.sh being
+      # reachable. Keyed on deno.lock so it invalidates when deps change.
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}
+          restore-keys: |
+            deno-${{ runner.os }}-
+
+      # esm.sh intermittently returns 522 (Cloudflare "connection timed out")
+      # while fetching modules, which aborts the whole run. On a cold cache,
+      # retry the test step a couple of times so a transient CDN blip doesn't
+      # fail CI. Warm-cache runs pass on the first attempt.
+      - name: Run tests
+        run: |
+          for attempt in 1 2 3; do
+            if npm test; then exit 0; fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::Deno test attempt $attempt failed (possible transient esm.sh outage); retrying in 15s"
+              sleep 15
+            fi
+          done
+          echo "::error::Deno tests failed after 3 attempts"
+          exit 1
+
+  frontend-unit:
+    name: Frontend Unit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Vitest (jsdom) component + logic suite. No infra dependency, so it
+      # belongs in the required gate alongside lint/typecheck and the Deno
+      # tests — previously it only ran inside the Claude bot workflows.
+      - name: Run frontend unit tests
+        run: npm run test:frontend
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test, frontend-unit]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # No env: this job exists to prove the tree compiles and bundles, not to
+      # produce a deployable artifact. Vite only inlines VITE_* values into the
+      # output, so their absence cannot fail the build — and wiring repository
+      # secrets in here would make a fork's CI fail for want of credentials it
+      # has no reason to hold. The deployment repository supplies real values
+      # to the build that actually ships.
+      - name: Build application
+        run: npm run build
+
+  # RLS policy tests against a throwaway local Supabase stack.
+  #
+  # Deliberately NOT run against the PR's Supabase preview branch: this suite
+  # creates and deletes users, institutions and courses, and the preview branch
+  # is the same database E2E Smoke is exercising at the same time. A local stack
+  # is hermetic and cannot silently fall back to a shared database.
+  #
+  # Gated on `changes` for PRs — RLS behaviour only moves when supabase/ moves —
+  # but left ungated on push/schedule so the nightly run catches drift from
+  # anywhere. `!cancelled()` is required because `changes` is skipped on
+  # non-PR events, which would otherwise skip this job with it.
+  rls:
+    name: RLS Policies
+    runs-on: ubuntu-latest
+    # The job normally finishes in 4.5–6 minutes. Without an explicit limit it
+    # inherits GitHub's 360-minute default, so a step that stalls rather than
+    # fails just burns runner time and reads as "still running" for hours. On
+    # 2026-08-19 the `Install psql` apt-get hung for 27 minutes on a dead
+    # `azure.archive.ubuntu.com` mirror before anyone noticed; 20 minutes is
+    # roughly 3x the normal runtime, so it absorbs a slow image pull while
+    # turning a genuine hang into a prompt, legible failure.
+    timeout-minutes: 20
+    needs: [changes]
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.supabase == 'true') }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # supabase/tests/rls/helpers/sql.ts shells out to psql for the suites that
+      # reach postgres-owned schemas (vault, cron) and RLS-with-no-policy tables.
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.109.1
+
+      # Only the containers the suite talks to: postgres, PostgREST, GoTrue and
+      # the kong gateway in front of them. Skipping studio/realtime/storage/
+      # analytics/etc. is a couple of minutes of image pulls saved per run.
+      - name: Start Supabase
+        run: supabase start -x studio,meta,realtime,storage,imgproxy,inbucket,edge-runtime,functions,vector,analytics
+
+      - name: Grant API roles access to public
+        run: ./scripts/local-db-grants.sh
+
+      - name: Run RLS tests
+        run: npm run test:rls
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup
+
+  # Detect what this PR touches under supabase/. Two distinct outputs because
+  # two different things key on them:
+  #
+  # - `supabase` (any supabase/** change) gates the RLS job, which runs
+  #   against a hermetic local stack and should exercise any backend change.
+  #
+  # E2E Smoke used to be gated here too (on a `schema` filter), because
+  # Supabase Branching only provisioned a preview DB branch for PRs that
+  # changed the schema surface — a branch-less PR's Vercel bundle embedded the
+  # production project ref, so smoke would have run against prod (observed on
+  # PR #1377). Since 2026-09-12 Branching is configured to provision a branch
+  # for EVERY PR, so smoke runs on every PR; the prod safety net moved into
+  # wait-for-vercel-preview.py, which refuses to test a bundle that embeds the
+  # production Supabase ref.
+  changes:
+    name: Detect Supabase changes
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      supabase: ${{ steps.filter.outputs.supabase }}
+    steps:
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            supabase:
+              - 'supabase/**'

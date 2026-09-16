@@ -1,0 +1,49 @@
+{
+  "roleLabel": "Evaluator",
+  "dashboard": {
+    "heading": "Courses Assigned for Review",
+    "subheading": "Pick a course to browse its question bank.",
+    "emptyTitle": "No courses assigned yet",
+    "emptyHint": "Your administrator can assign you to courses for review."
+  },
+  "course": {
+    "back": "Back to my courses",
+    "startReview": "Start review",
+    "unavailable": "This course is not available, or you are not assigned to it.",
+    "returnToCourses": "Return to my courses"
+  },
+  "nav": {
+    "position": "Question {{current}} of {{total}}",
+    "noQuestions": "No questions",
+    "prev": "Previous",
+    "prevAria": "Previous question",
+    "next": "Next",
+    "nextAria": "Next question",
+    "jumpUnevaluated": "Next unevaluated",
+    "jumpUnevaluatedAria": "Next unevaluated question",
+    "autoAdvance": "Auto-advance"
+  },
+  "shortcuts": {
+    "trigger": "Keyboard shortcuts",
+    "title": "Shortcuts",
+    "nextQuestion": "Next question",
+    "prevQuestion": "Previous question",
+    "nextUnevaluated": "Next unevaluated",
+    "save": "Save",
+    "verdictGood": "Verdict: Good",
+    "verdictNeedsFixing": "Verdict: Needs fixing",
+    "verdictReject": "Verdict: Reject",
+    "note": "Shortcuts are inactive while you are typing in a text field."
+  },
+  "filters": {
+    "searchPlaceholder": "Search…",
+    "searchAria": "Search questions",
+    "clearSearch": "Clear search",
+    "unevaluatedOnly": "Unevaluated only",
+    "type": "Type",
+    "typeAria": "Type filter",
+    "difficulty": "Difficulty",
+    "difficultyAria": "Difficulty filter",
+    "visibleCount": "{{visible}} / {{total}} visible"
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "surface": {
+    "greeting": {
+      "morning": "Καλημέρα, {{name}}",
+      "afternoon": "Καλό απόγευμα, {{name}}",
+      "evening": "Καλησπέρα, {{name}}",
+      "anonymous": "Η δουλειά σου"
+    },
+    "summary": {
+      "due_one": "{{count}} εκκρεμότητα",
+      "due_other": "{{count}} εκκρεμότητες",
+      "cards_one": "{{count}} κάρτα για επανάληψη",
+      "cards_other": "{{count}} κάρτες για επανάληψη",
+      "clear": "Δεν εκκρεμεί τίποτα — καλή ευκαιρία να προχωρήσεις."
+    },
+    "filter": {
+      "label": "Φίλτρο ανά μάθημα",
+      "all": "Όλα"
+    },
+    "due": {
+      "overdue": "Εκπρόθεσμο",
+      "today": "Σήμερα",
+      "tomorrow": "Αύριο"
+    },
+    "quizzes": {
+      "title": "Κουίζ",
+      "empty": "Δεν σε περιμένει κανένα κουίζ."
+    },
+    "guides": {
+      "title": "Οδηγοί μελέτης",
+      "empty": "Δεν σε περιμένει κανένας οδηγός μελέτης."
+    },
+    "courses": {
+      "title": "Τα μαθήματά σου",
+      "quizzesDue_one": "{{count}} κουίζ σε εκκρεμότητα",
+      "quizzesDue_other": "{{count}} κουίζ σε εκκρεμότητα",
+      "guidesDue_one": "{{count}} οδηγός σε εκκρεμότητα",
+      "guidesDue_other": "{{count}} οδηγοί σε εκκρεμότητα",
+      "clear": "Καμία εκκρεμότητα"
+    },
+    "launcher": {
+      "practiceTitle": "Εξάσκηση",
+      "sessions_one": "{{count}} συνεδρία",
+      "sessions_other": "{{count}} συνεδρίες",
+      "historyMeta": "Προηγούμενες προσπάθειες και αποτελέσματα"
+    },
+    "practise": {
+      "empty": "Δεν σου έχουν ανατεθεί ερωτήσεις εξάσκησης ακόμα.",
+      "remaining_one": "Απομένει {{count}} ερώτηση",
+      "remaining_other": "Απομένουν {{count}} ερωτήσεις",
+      "allDone": "Όλα απαντήθηκαν — ξανά από την αρχή"
+    },
+    "cards": {
+      "clear": "Καμία εκκρεμότητα"
+    },
+    "tutor": {
+      "empty": "Δεν υπάρχει κάτι να συζητήσεις αυτή τη στιγμή."
+    },
+    "course": {
+      "allCourses": "Όλα τα μαθήματα",
+      "back": "Πίσω στο μάθημα"
+    }
+  },
+  "nav": {
+    "backToAdmin": "Πίσω στη διαχείριση",
+    "roleFallback": "Μαθητής"
+  },
+  "profile": {
+    "fatherName": "Όνομα πατέρα:",
+    "dateOfBirth": "Ημερομηνία γέννησης:"
+  },
+  "dashboard": {
+    "heading": "Τα μαθήματά σου",
+    "welcome": "Καλώς ήρθες, <1>{{name}}</1>",
+    "prompt": "Διάλεξε ένα μάθημα για να ξεκινήσεις",
+    "noInstitutionTitle": "Δεν έχεις πρόσβαση σε ίδρυμα ακόμα",
+    "noInstitutionHint": "Αν μόλις αποδέχτηκες μια πρόσκληση, δοκίμασε να ανανεώσεις τη σελίδα. Η πρόσβασή σου μπορεί να χρειαστεί λίγο για να ενεργοποιηθεί. Αυτόματη ανανέωση κάθε 5 δευτερόλεπτα…",
+    "refreshNow": "Ανανέωση τώρα",
+    "noCoursesTitle": "Δεν υπάρχουν διαθέσιμα μαθήματα ακόμα",
+    "noCoursesHint": "Επικοινώνησε με τον διαχειριστή σου για να αποκτήσεις πρόσβαση σε μαθήματα"
+  },
+  "classFilter": {
+    "label": "Φίλτρο ανά τμήμα",
+    "all": "Όλα τα τμήματα",
+    "select": "Επιλογή τμήματος"
+  },
+  "courseCard": {
+    "new": "Νέο",
+    "quizzes_one": "{{count}} κουίζ",
+    "quizzes_other": "{{count}} κουίζ",
+    "due": "Έως {{date}}"
+  },
+  "browseClasses": {
+    "title": "Διαθέσιμα τμήματα",
+    "description": "Μπες σε ένα τμήμα για να δεις τα μαθήματα και το περιεχόμενό του",
+    "enrolled_one": "{{count}} εγγεγραμμένος",
+    "enrolled_other": "{{count}} εγγεγραμμένοι",
+    "join": "Εγγραφή",
+    "joinSuccess": "Η εγγραφή στο τμήμα ολοκληρώθηκε!",
+    "joinFailed": "Η εγγραφή στο τμήμα απέτυχε"
+  },
+  "browseInstitutions": {
+    "title": "Δημόσια ιδρύματα",
+    "loading": "Φόρτωση…",
+    "available_one": "{{count}} ίδρυμα διαθέσιμο για εγγραφή",
+    "available_other": "{{count}} ιδρύματα διαθέσιμα για εγγραφή",
+    "join": "Εγγραφή",
+    "joinSuccess": "Έγινες μέλος του {{name}}!",
+    "joinFailed": "Η εγγραφή στο ίδρυμα απέτυχε"
+  },
+  "nextUp": {
+    "label": "Επόμενο βήμα",
+    "eyebrow": {
+      "quiz": "Κουίζ",
+      "studyGuide": "Οδηγός μελέτης",
+      "review": "Επανάληψη",
+      "learn": "Μάθηση",
+      "practice": "Εξάσκηση",
+      "withDue": "{{category}} · {{due}}"
+    },
+    "due": {
+      "in": "σε {{distance}}",
+      "overdue": "εκπρόθεσμο κατά {{distance}}"
+    },
+    "quizMeta": {
+      "questions_one": "{{count}} ερώτηση",
+      "questions_other": "{{count}} ερωτήσεις",
+      "minutes_one": "{{count}} λεπτό",
+      "minutes_other": "{{count}} λεπτά"
+    },
+    "quizResumeDetail": "Το έχεις ξεκινήσει — {{meta}}",
+    "guideProgress_one": "{{completed}} από {{count}} κομμάτι ολοκληρωμένο",
+    "guideProgress_other": "{{completed}} από {{count}} κομμάτια ολοκληρωμένα",
+    "flashcardsTitle": "Έχεις κάρτες για επανάληψη",
+    "flashcardsDetail_one": "{{count}} κάρτα προγραμματισμένη για επανάληψη",
+    "flashcardsDetail_other": "{{count}} κάρτες προγραμματισμένες για επανάληψη",
+    "interactiveTitle": "Διαδραστικές ερωτήσεις AI",
+    "interactiveDetail_one": "{{count}} ερώτηση σε αναμονή — ο βοηθός σε καθοδηγεί στην απάντηση",
+    "interactiveDetail_other": "{{count}} ερωτήσεις σε αναμονή — ο βοηθός σε καθοδηγεί στην απάντηση",
+    "practiceTitle": "Ερωτήσεις εξάσκησης",
+    "practiceLoadingDetail": "Όλες οι ερωτήσεις που σου έχουν ανατεθεί, σε μία λίστα",
+    "practiceRemainingDetail_one": "{{count}} ερώτηση που δεν έχεις ολοκληρώσει",
+    "practiceRemainingDetail_other": "{{count}} ερωτήσεις που δεν έχεις ολοκληρώσει",
+    "practiceDoneDetail": "Απάντησες σε όλες τις ερωτήσεις — κάνε άλλη μια επανάληψη",
+    "cta": {
+      "quiz_resume": "Συνέχεια κουίζ",
+      "quiz_start": "Έναρξη κουίζ",
+      "guide_continue": "Συνέχεια οδηγού",
+      "guide_start": "Έναρξη οδηγού",
+      "flashcards": "Επανάληψη καρτών",
+      "interactive": "Ξεκίνα μια ερώτηση",
+      "practice_loading": "Ξεκίνα εξάσκηση",
+      "practice_remaining": "Ξεκίνα εξάσκηση",
+      "practice_done": "Ξανά εξάσκηση"
+    }
+  },
+  "course": {
+    "notFound": "Το μάθημα δεν βρέθηκε",
+    "manageCourse": "Διαχείριση μαθήματος",
+    "quizHistory": "Ιστορικό κουίζ",
+    "quiz": {
+      "questions_one": "{{count}} ερώτηση",
+      "questions_other": "{{count}} ερωτήσεις",
+      "score": "{{score}}/{{total}} ({{percent}}%)",
+      "resultsPending": "εκκρεμούν αποτελέσματα",
+      "due": "λήγει {{distance}}",
+      "wasDue": "έληξε {{distance}}",
+      "badgeClosed": "Κλειστό",
+      "badgeCompleted": "Ολοκληρώθηκε",
+      "badgeInProgress": "Σε εξέλιξη",
+      "badgeOverdue": "Εκπρόθεσμο",
+      "actionClosed": "Κλειστό",
+      "actionReview": "Επισκόπηση",
+      "actionResults": "Αποτελέσματα",
+      "actionResume": "Συνέχεια",
+      "actionStart": "Έναρξη",
+      "minutes_one": "{{count}} λεπτό",
+      "minutes_other": "{{count}} λεπτά"
+    },
+    "guide": {
+      "progress_one": "{{completed}} από {{count}} κομμάτι ολοκληρωμένο",
+      "progress_other": "{{completed}} από {{count}} κομμάτια ολοκληρωμένα",
+      "due": "λήγει {{date}}",
+      "wasDue": "έληξε {{date}}",
+      "badgeComplete": "Ολοκληρωμένο",
+      "badgeOverdue": "Εκπρόθεσμο",
+      "actionReview": "Επισκόπηση",
+      "actionContinue": "Συνέχεια",
+      "actionStart": "Έναρξη"
+    },
+    "tutoring": {
+      "title": "Συνεδρίες με τον βοηθό AI"
+    },
+    "cheatSheets": {
+      "title": "Βασικές έννοιες",
+      "meta": "Σύντομες περιλήψεις αναφοράς",
+      "action": "Προβολή"
+    },
+    "notes": {
+      "title": "Σημειώσεις",
+      "meta_one": "{{count}} έγγραφο από τον καθηγητή σου",
+      "meta_other": "{{count}} έγγραφα από τον καθηγητή σου",
+      "action": "Άνοιγμα",
+      "download": "Λήψη",
+      "empty": "Ο καθηγητής σου δεν έχει μοιραστεί ακόμη σημειώσεις.",
+      "openFailed": "Δεν ήταν δυνατό το άνοιγμα της σημείωσης. Δοκίμασε ξανά.",
+      "heading": "Σημειώσεις"
+    },
+    "flashcards": {
+      "title": "Κάρτες",
+      "meta": "Επαναλαμβανόμενη μελέτη βασικών εννοιών",
+      "actionReview": "Επανάληψη",
+      "actionBrowse": "Περιήγηση",
+      "badgeDue_one": "{{count}} σε εκκρεμότητα",
+      "badgeDue_other": "{{count}} σε εκκρεμότητα"
+    },
+    "interactive": {
+      "title": "Διαδραστικές ερωτήσεις AI",
+      "meta": "Σωκρατικός διάλογος — ο βοηθός σε καθοδηγεί στην απάντηση",
+      "actionStart": "Έναρξη",
+      "actionBrowse": "Περιήγηση",
+      "badgeWaiting_one": "{{count}} σε αναμονή",
+      "badgeWaiting_other": "{{count}} σε αναμονή"
+    },
+    "createOwn": {
+      "title": "Φτιάξε τις δικές σου",
+      "meta": "Δημιούργησε ερωτήσεις εξάσκησης με AI από οποιοδήποτε κεφάλαιο",
+      "action": "Δημιουργία"
+    },
+    "community": {
+      "title": "Ερωτήσεις της κοινότητας",
+      "meta": "Ερωτήσεις γραμμένες από άλλους μαθητές",
+      "action": "Περιήγηση"
+    },
+    "assess": {
+      "badgeClosed": "Έκλεισε",
+      "badgeSubmitted": "Υποβλήθηκε",
+      "badgeInProgress": "Σε εξέλιξη",
+      "badgeOverdue": "Εκπρόθεσμο",
+      "badgeNotStarted": "Δεν ξεκίνησε",
+      "overdueBy": "Εκπρόθεσμο κατά {{distance}}",
+      "dueIn": "Προθεσμία {{distance}}",
+      "questions_one": "{{count}} ερώτηση",
+      "questions_other": "{{count}} ερωτήσεις",
+      "percent": "({{percent}}%)",
+      "actionReviewAnswers": "Δες τις απαντήσεις",
+      "actionViewResults": "Δες τα αποτελέσματα",
+      "actionClosed": "Έκλεισε",
+      "actionContinue": "Συνέχεια",
+      "actionStart": "Έναρξη",
+      "headingAvailable": "Διαθέσιμα κουίζ",
+      "headingCompleted": "Ολοκληρωμένα",
+      "headingClosed": "Έκλεισαν",
+      "emptyTitle": "Δεν υπάρχουν κουίζ ακόμα",
+      "emptyBody": "Ο καθηγητής σου δεν έχει αναθέσει ακόμα κουίζ σε αυτό το μάθημα.",
+      "minutes_one": "{{count}} λεπτό",
+      "minutes_other": "{{count}} λεπτά"
+    }
+  },
+  "whatsNew": {
+    "title": "Τι νέο υπάρχει",
+    "since": "Από την τελευταία σου επίσκεψη {{distance}}",
+    "newPracticeQuestions_one": "{{count}} νέα ερώτηση εξάσκησης",
+    "newPracticeQuestions_other": "{{count}} νέες ερωτήσεις εξάσκησης",
+    "newAiQuestions_one": "{{count}} νέα ερώτηση εξάσκησης AI",
+    "newAiQuestions_other": "{{count}} νέες ερωτήσεις εξάσκησης AI",
+    "fallbackTutoringSession": "Συνεδρία μελέτης",
+    "fallbackQuiz": "Κουίζ",
+    "badge": {
+      "study_session": "Συνεδρία μελέτης",
+      "material": "Υλικό",
+      "flashcard": "Κάρτες",
+      "question": "Εξάσκηση",
+      "quiz": "Κουίζ",
+      "open_question": "Εξάσκηση AI",
+      "default": "Νέο"
+    },
+    "more_one": "+{{count}} ακόμα νέο στοιχείο",
+    "more_other": "+{{count}} ακόμα νέα στοιχεία"
+  },
+  "quizHistory": {
+    "title": "Ιστορικό κουίζ",
+    "emptyTitle": "Δεν υπάρχουν ολοκληρωμένα κουίζ",
+    "emptyBody": "Δεν έχεις ολοκληρώσει κανένα κουίζ σε αυτό το μάθημα ακόμα.",
+    "badgeCompleted": "Ολοκληρώθηκε",
+    "completedOn": "Ολοκληρώθηκε {{date}}",
+    "reviewAnswers": "Δες τις απαντήσεις",
+    "resultsPending": "Τα αποτελέσματα εκκρεμούν",
+    "loadFailed": "Η φόρτωση του ιστορικού κουίζ απέτυχε",
+    "minutes_one": "{{count}} λεπτό",
+    "minutes_other": "{{count}} λεπτά"
+  },
+  "quizReview": {
+    "title": "Οι απαντήσεις σου",
+    "subtitle": "{{title}} — δες κάθε ερώτηση με τη σωστή απάντηση και την επεξήγηση",
+    "noQuestions": "Δεν βρέθηκαν ερωτήσεις για αυτό το κουίζ.",
+    "statCorrect": "Σωστές",
+    "statScore": "Βαθμολογία",
+    "statQuestions": "Ερωτήσεις",
+    "noAnswer": "Καμία απάντηση",
+    "correct": "Σωστό",
+    "incorrect": "Λάθος",
+    "yourAnswer": "Η απάντησή σου",
+    "correctAnswer": "Σωστή απάντηση",
+    "explanation": "Επεξήγηση",
+    "loadFailed": "Η φόρτωση των απαντήσεών σου απέτυχε",
+    "questionNumber": "Ερ.{{number}}"
+  }
+}

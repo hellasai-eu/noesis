@@ -1,0 +1,14 @@
+-- No-op placeholder.
+--
+-- An earlier revision of PR #715 added a backfill migration at this timestamp
+-- to promote existing GR institutions to greek_school. It was applied to the
+-- Supabase preview branch before the PR was rescoped to remove self-service
+-- institution creation entirely (institutions are now super-admin-only), at
+-- which point the backfill became unnecessary and the file was deleted.
+--
+-- The preview branch's supabase_migrations.schema_migrations table still has
+-- version 20260626130000 recorded, so removing the file outright produced a
+-- "Remote migration versions not found in local migrations directory" error
+-- on every push. This empty migration restores the file so the version check
+-- passes; it is a no-op on fresh databases.
+SELECT 1;

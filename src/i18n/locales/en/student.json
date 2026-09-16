@@ -1,0 +1,309 @@
+{
+  "surface": {
+    "greeting": {
+      "morning": "Good morning, {{name}}",
+      "afternoon": "Good afternoon, {{name}}",
+      "evening": "Good evening, {{name}}",
+      "anonymous": "Your work"
+    },
+    "summary": {
+      "due_one": "{{count}} thing due",
+      "due_other": "{{count}} things due",
+      "cards_one": "{{count}} card to review",
+      "cards_other": "{{count}} cards to review",
+      "clear": "Nothing is due — a good evening to get ahead."
+    },
+    "filter": {
+      "label": "Filter by course",
+      "all": "Everything"
+    },
+    "due": {
+      "overdue": "Overdue",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    },
+    "quizzes": {
+      "title": "Quizzes",
+      "empty": "No quizzes are waiting for you."
+    },
+    "guides": {
+      "title": "Study guides",
+      "empty": "No study guides are waiting for you."
+    },
+    "courses": {
+      "title": "Your courses",
+      "quizzesDue_one": "{{count}} quiz due",
+      "quizzesDue_other": "{{count}} quizzes due",
+      "guidesDue_one": "{{count}} guide due",
+      "guidesDue_other": "{{count}} guides due",
+      "clear": "All clear"
+    },
+    "launcher": {
+      "practiceTitle": "Practice",
+      "sessions_one": "{{count}} session",
+      "sessions_other": "{{count}} sessions",
+      "historyMeta": "Past attempts and results"
+    },
+    "practise": {
+      "empty": "No practice questions have been set for you yet.",
+      "remaining_one": "{{count}} question left",
+      "remaining_other": "{{count}} questions left",
+      "allDone": "All done — go again"
+    },
+    "cards": {
+      "clear": "Nothing due"
+    },
+    "tutor": {
+      "empty": "Nothing to talk through right now."
+    },
+    "course": {
+      "allCourses": "All courses",
+      "back": "Back to the course"
+    }
+  },
+  "nav": {
+    "backToAdmin": "Back to Admin",
+    "roleFallback": "Student"
+  },
+  "profile": {
+    "fatherName": "Father's Name:",
+    "dateOfBirth": "Date of Birth:"
+  },
+  "dashboard": {
+    "heading": "Your Courses",
+    "welcome": "Welcome, <1>{{name}}</1>",
+    "prompt": "Click on a course to start learning",
+    "noInstitutionTitle": "No institution access yet",
+    "noInstitutionHint": "If you just accepted an invitation, try refreshing the page. Your access may take a moment to activate. Auto-refreshing every 5 seconds...",
+    "refreshNow": "Refresh Now",
+    "noCoursesTitle": "No courses available yet",
+    "noCoursesHint": "Contact your administrator to get access to courses"
+  },
+  "classFilter": {
+    "label": "Filter by Class",
+    "all": "All Classes",
+    "select": "Select Class"
+  },
+  "courseCard": {
+    "new": "New",
+    "quizzes_one": "{{count}} quiz",
+    "quizzes_other": "{{count}} quizzes",
+    "due": "Due {{date}}"
+  },
+  "browseClasses": {
+    "title": "Browse Available Classes",
+    "description": "Join a class to access its courses and content",
+    "enrolled_one": "{{count}} enrolled",
+    "enrolled_other": "{{count}} enrolled",
+    "join": "Join",
+    "joinSuccess": "Successfully enrolled in class!",
+    "joinFailed": "Failed to enroll in class"
+  },
+  "browseInstitutions": {
+    "title": "Browse Public Institutions",
+    "loading": "Loading...",
+    "available_one": "{{count}} institution available to join",
+    "available_other": "{{count}} institutions available to join",
+    "join": "Join",
+    "joinSuccess": "Joined {{name}} successfully!",
+    "joinFailed": "Failed to join institution"
+  },
+  "nextUp": {
+    "label": "Next up",
+    "eyebrow": {
+      "quiz": "Quiz",
+      "studyGuide": "Study guide",
+      "review": "Review",
+      "learn": "Learn",
+      "practice": "Practice",
+      "withDue": "{{category}} · {{due}}"
+    },
+    "due": {
+      "in": "due in {{distance}}",
+      "overdue": "overdue by {{distance}}"
+    },
+    "quizMeta": {
+      "questions_one": "{{count}} question",
+      "questions_other": "{{count}} questions",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min"
+    },
+    "quizResumeDetail": "You started this one — {{meta}}",
+    "guideProgress_one": "{{completed}} of {{count}} piece done",
+    "guideProgress_other": "{{completed}} of {{count}} pieces done",
+    "flashcardsTitle": "Flashcards are due",
+    "flashcardsDetail_one": "{{count}} card scheduled for review",
+    "flashcardsDetail_other": "{{count}} cards scheduled for review",
+    "interactiveTitle": "AI interactive questions",
+    "interactiveDetail_one": "{{count}} question waiting — the tutor guides you to the answer",
+    "interactiveDetail_other": "{{count}} questions waiting — the tutor guides you to the answer",
+    "practiceTitle": "Practice questions",
+    "practiceLoadingDetail": "Every question assigned to you, in one list",
+    "practiceRemainingDetail_one": "{{count}} question you haven't finished yet",
+    "practiceRemainingDetail_other": "{{count}} questions you haven't finished yet",
+    "practiceDoneDetail": "You've answered every assigned question — go again for the reps",
+    "cta": {
+      "quiz_resume": "Resume quiz",
+      "quiz_start": "Start quiz",
+      "guide_continue": "Continue guide",
+      "guide_start": "Start guide",
+      "flashcards": "Review flashcards",
+      "interactive": "Start a question",
+      "practice_loading": "Start practising",
+      "practice_remaining": "Start practising",
+      "practice_done": "Practice again"
+    }
+  },
+  "course": {
+    "notFound": "Course not found",
+    "manageCourse": "Manage this course",
+    "quizHistory": "Quiz history",
+    "quiz": {
+      "questions_one": "{{count}} question",
+      "questions_other": "{{count}} questions",
+      "score": "{{score}}/{{total}} ({{percent}}%)",
+      "resultsPending": "results pending",
+      "due": "due {{distance}}",
+      "wasDue": "was due {{distance}}",
+      "badgeClosed": "Closed",
+      "badgeCompleted": "Completed",
+      "badgeInProgress": "In progress",
+      "badgeOverdue": "Overdue",
+      "actionClosed": "Closed",
+      "actionReview": "Review",
+      "actionResults": "Results",
+      "actionResume": "Resume",
+      "actionStart": "Start",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min"
+    },
+    "guide": {
+      "progress_one": "{{completed}} of {{count}} piece done",
+      "progress_other": "{{completed}} of {{count}} pieces done",
+      "due": "due {{date}}",
+      "wasDue": "was due {{date}}",
+      "badgeComplete": "Complete",
+      "badgeOverdue": "Overdue",
+      "actionReview": "Review",
+      "actionContinue": "Continue",
+      "actionStart": "Start"
+    },
+    "tutoring": {
+      "title": "AI tutoring sessions"
+    },
+    "cheatSheets": {
+      "title": "Key concepts",
+      "meta": "Quick reference summaries",
+      "action": "View"
+    },
+    "notes": {
+      "title": "Notes",
+      "meta_one": "{{count}} document shared by your teacher",
+      "meta_other": "{{count}} documents shared by your teacher",
+      "action": "Open",
+      "download": "Download",
+      "empty": "Your teacher has not shared any notes yet.",
+      "openFailed": "Could not open that note. Try again.",
+      "heading": "Notes"
+    },
+    "flashcards": {
+      "title": "Flashcards",
+      "meta": "Spaced repetition for key concepts",
+      "actionReview": "Review",
+      "actionBrowse": "Browse",
+      "badgeDue_one": "{{count}} due",
+      "badgeDue_other": "{{count}} due"
+    },
+    "interactive": {
+      "title": "AI interactive questions",
+      "meta": "Socratic chat — the AI tutor guides you to the answer",
+      "actionStart": "Start",
+      "actionBrowse": "Browse",
+      "badgeWaiting_one": "{{count}} waiting",
+      "badgeWaiting_other": "{{count}} waiting"
+    },
+    "createOwn": {
+      "title": "Create your own",
+      "meta": "Generate AI practice questions from any chapter",
+      "action": "Create"
+    },
+    "community": {
+      "title": "Community questions",
+      "meta": "Questions written by other students",
+      "action": "Browse"
+    },
+    "assess": {
+      "badgeClosed": "Closed",
+      "badgeSubmitted": "Submitted",
+      "badgeInProgress": "In Progress",
+      "badgeOverdue": "Overdue",
+      "badgeNotStarted": "Not Started",
+      "overdueBy": "Overdue by {{distance}}",
+      "dueIn": "Due {{distance}}",
+      "questions_one": "{{count}} question",
+      "questions_other": "{{count}} questions",
+      "percent": "({{percent}}%)",
+      "actionReviewAnswers": "Review Answers",
+      "actionViewResults": "View Results",
+      "actionClosed": "Closed",
+      "actionContinue": "Continue",
+      "actionStart": "Start",
+      "headingAvailable": "Available Quizzes",
+      "headingCompleted": "Completed",
+      "headingClosed": "Closed",
+      "emptyTitle": "No Quizzes Yet",
+      "emptyBody": "Your instructor hasn't assigned any quizzes to this course yet.",
+      "minutes_one": "{{count}} min",
+      "minutes_other": "{{count}} min"
+    }
+  },
+  "whatsNew": {
+    "title": "What's New",
+    "since": "Since your last visit {{distance}}",
+    "newPracticeQuestions_one": "{{count}} new practice question",
+    "newPracticeQuestions_other": "{{count}} new practice questions",
+    "newAiQuestions_one": "{{count}} new AI practice question",
+    "newAiQuestions_other": "{{count}} new AI practice questions",
+    "fallbackTutoringSession": "Tutoring Session",
+    "fallbackQuiz": "Quiz",
+    "badge": {
+      "study_session": "Tutoring Session",
+      "material": "Material",
+      "flashcard": "Flashcards",
+      "question": "Practice",
+      "quiz": "Quiz",
+      "open_question": "AI Practice",
+      "default": "New"
+    },
+    "more_one": "+{{count}} more new item",
+    "more_other": "+{{count}} more new items"
+  },
+  "quizHistory": {
+    "title": "Quiz History",
+    "emptyTitle": "No Completed Quizzes",
+    "emptyBody": "You haven't completed any quizzes in this course yet.",
+    "badgeCompleted": "Completed",
+    "completedOn": "Completed {{date}}",
+    "reviewAnswers": "Review Answers",
+    "resultsPending": "Results pending",
+    "loadFailed": "Failed to load quiz history",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min"
+  },
+  "quizReview": {
+    "title": "Your Answers",
+    "subtitle": "{{title}} — review each question with the correct answer and explanation",
+    "noQuestions": "No questions found for this quiz.",
+    "statCorrect": "Correct",
+    "statScore": "Score",
+    "statQuestions": "Questions",
+    "noAnswer": "No answer",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "explanation": "Explanation",
+    "loadFailed": "Failed to load your answers",
+    "questionNumber": "Q{{number}}"
+  }
+}

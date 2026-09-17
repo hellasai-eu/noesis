@@ -22,7 +22,13 @@ supabase/.env*
 supabase/.branches/
 supabase/.temp/
 
-!supabase/.env.preview
+# Every supabase/.env* stays ignored, with no exception. An encrypted
+# `.env.preview` used to be committed here so Supabase Branching could decrypt
+# it at branch-deploy time, but that ties this repository to one deployment's
+# keys and keypair. Deployment-specific values belong in whatever private
+# repository does the hosting; `supabase/config.toml` still declares which
+# variables edge functions expect, which is generic.
+
 # Deploy secrets
 .env.deploy
 

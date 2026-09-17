@@ -194,19 +194,23 @@ Production (and any other hosted project):
 supabase secrets set CONTENT_PROVIDER_API_KEY=sk-...
 ```
 
-Preview branches read their secrets from the encrypted `supabase/.env.preview`
-plus an `[edge_runtime.secrets]` entry in `config.toml`, the way
-`OPENAI_API_KEY` / `CONVERT_API_KEY` do. To give branches the key as well:
+Branch databases are separate projects and do not inherit the parent's secrets.
+A deployment that wants this key on preview branches supplies its own
+`supabase/.env.preview` — that file is deployment-specific and is not committed
+here (see `.gitignore`), so it lives in whatever private repository does the
+hosting:
 
 ```sh
-npx dotenvx set CONTENT_PROVIDER_API_KEY 'sk-...' -f supabase/.env.preview --encrypt
+npx @dotenvx/dotenvx set CONTENT_PROVIDER_API_KEY 'sk-...' -f supabase/.env.preview --encrypt
 ```
 
-then add to `config.toml` under `[edge_runtime.secrets]`:
+and add the declaration to `config.toml` under `[edge_runtime.secrets]`:
 
 ```toml
 CONTENT_PROVIDER_API_KEY = "env(CONTENT_PROVIDER_API_KEY)"
 ```
 
-Both steps are deliberately left undone here: `config.toml` syncs to every
-branch, so the entry must not land before the encrypted value exists.
+The declaration is deliberately left out here. `config.toml` syncs to every
+branch, so adding the entry before a deployment has the corresponding value
+fails config parsing and blocks branch provisioning outright — the whole branch,
+not just this function.

@@ -218,12 +218,23 @@ verify_jwt = false
 [functions.validate-questions]
 verify_jwt = false
 
-# Provide OPENAI_API_KEY to Edge Functions on every Supabase branch. The value is
-# stored ENCRYPTED in supabase/.env.preview (committed) and decrypted at branch
-# deploy time using DOTENV_PRIVATE_KEY_PREVIEW (a project secret on the parent
-# project). config.toml syncs to all branches, so this exposes the secret to each
-# preview branch's function runtime. Prod sets OPENAI_API_KEY via its own project
-# secret independently.
+# Variables the Edge Functions expect at runtime. `env(NAME)` resolves from the
+# environment Supabase builds for a deployment, so these declarations say what
+# the functions need without saying where any value comes from — nothing here is
+# specific to a deployment.
+#
+# Supplying the values is the deployer's job, and the two paths differ:
+#   - Production reads them from that project's own Supabase secrets.
+#   - Branch databases are separate projects and do NOT inherit the parent's
+#     secrets, so a deployment that wants working AI on preview branches has to
+#     provide `supabase/.env.preview` itself. It is intentionally NOT committed
+#     here (see .gitignore): it would pin this repository to one deployment's
+#     API keys and one dotenvx keypair. Keep it in the private repository that
+#     does the hosting, encrypted, with DOTENV_PRIVATE_KEY_PREVIEW set as a
+#     secret on the parent project.
+#
+# Without it, config still parses and branches provision; only the AI-backed
+# functions fail on previews. To opt out entirely, delete this block.
 [edge_runtime.secrets]
 OPENAI_API_KEY = "env(OPENAI_API_KEY)"
 RESEND_API_KEY = "env(RESEND_API_KEY)"

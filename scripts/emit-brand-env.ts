@@ -75,21 +75,30 @@ const missing = Object.entries(derived)
   .filter(([, value]) => value === null)
   .map(([key]) => key);
 
-if (present.length === 0) {
-  process.stderr.write(
-    `[brand] ${path.relative(root, metaFile)} sets none of the fields this derives ` +
-      `(name, canonicalUrl, contactEmail).\n`,
-  );
-  process.exit(0);
-}
-
 /** Single-quote for a POSIX shell: wrap, and close-escape-reopen for quotes. */
 const shellQuote = (value: string) => `'${value.replace(/'/g, `'\\''`)}'`;
 
+/**
+ * A field the overlay no longer sets has to be *cleared*, not merely omitted.
+ *
+ * `supabase secrets set` is additive: omitting a variable leaves whatever was
+ * set before. So an operator who removes `canonicalUrl` and reruns this would
+ * keep the old `BRAND_APP_URL`, and their security emails would go on linking
+ * to the previous deployment — the opposite of the documented unset
+ * behaviour, and silent.
+ *
+ * Emitted as an explicit empty assignment rather than `secrets unset`, because
+ * `edgeBrand()` already treats blank as unset and one `set` line is a single
+ * atomic change an operator can paste and verify.
+ */
 if (asDotenv) {
   for (const [key, value] of present) process.stdout.write(`${key}=${value}\n`);
+  for (const key of missing) process.stdout.write(`${key}=\n`);
 } else {
-  const pairs = present.map(([key, value]) => `${key}=${shellQuote(value)}`);
+  const pairs = [
+    ...present.map(([key, value]) => `${key}=${shellQuote(value)}`),
+    ...missing.map((key) => `${key}=''`),
+  ];
   process.stdout.write(`supabase secrets set ${pairs.join(" ")}\n`);
 }
 
@@ -100,7 +109,8 @@ process.stderr.write(
 );
 if (missing.length > 0) {
   process.stderr.write(
-    `[brand] not set in the overlay, so not emitted: ${missing.join(", ")}\n`,
+    `[brand] not set in the overlay, so emitted empty to clear any previous ` +
+      `value: ${missing.join(", ")}\n`,
   );
 }
 process.stderr.write(

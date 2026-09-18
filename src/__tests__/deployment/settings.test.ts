@@ -118,8 +118,51 @@ describe("validateSettings", () => {
   it("rejects shapes rather than throwing on them", () => {
     expect(validateSettings(null)).toHaveLength(1);
     expect(validateSettings("nope")).toHaveLength(1);
+    // Arrays are the trap: `typeof [] === "object"`, so without an explicit
+    // check a policy file containing `[]` reads as "no mfa key, use the
+    // defaults" and is reported as valid. Both levels need it.
+    expect(validateSettings([])).toHaveLength(1);
+    expect(validateSettings([{ mfa: {} }])).toHaveLength(1);
     expect(validateSettings({ mfa: [] })).toHaveLength(1);
     expect(validateSettings({ mfa: { enforceForRoles: "admin" } })).toHaveLength(1);
+  });
+
+  it("rejects a calendar date that does not exist", () => {
+    // `Date.parse("2026-02-30T00:00:00Z")` rolls forward to March 2nd rather
+    // than failing, but Postgres rejects the literal — and
+    // `mfa_role_enforced_now` reads a rejected literal as "enforce now". So a
+    // typo in a future deadline would lock the role out immediately, having
+    // passed the build gate. Checked here rather than discovered there.
+    for (const bad of [
+      "2026-02-30T00:00:00Z",
+      "2026-04-31T00:00:00Z",
+      "2026-00-10T00:00:00Z",
+      "2026-13-01T00:00:00Z",
+      "2026-11-32T00:00:00Z",
+      "2026-11-01T24:00:00Z",
+      "2026-11-01T00:60:00Z",
+    ]) {
+      const problems = validateSettings({
+        mfa: { enforceForRoles: ["student"], deadlines: { student: bad } },
+      });
+      expect(problems.length, `${bad} should be rejected`).toBeGreaterThan(0);
+    }
+  });
+
+  it("still accepts the real leap day and the last second of a day", () => {
+    // The round-trip check must not overreach: 2028 is a leap year.
+    for (const good of [
+      "2028-02-29T00:00:00Z",
+      "2026-12-31T23:59:59Z",
+      "2026-11-01T00:00:00.500Z",
+    ]) {
+      expect(
+        validateSettings({
+          mfa: { enforceForRoles: ["student"], deadlines: { student: good } },
+        }),
+        `${good} should be accepted`,
+      ).toEqual([]);
+    }
   });
 });
 

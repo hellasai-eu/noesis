@@ -400,33 +400,51 @@ $$;
 
 -- ── 6. Execute-privilege hygiene ────────────────────────────────────────────
 --
--- Postgres grants EXECUTE to PUBLIC on new functions, which would let
--- anonymous clients call these SECURITY DEFINER helpers. The ones taking a
--- _user_id would also let any signed-in user probe other people's roles, so
--- those are service-role only; the argument-free ones that speak about the
--- caller are open to authenticated.
+-- Postgres grants EXECUTE to PUBLIC on every new function, which would let
+-- anonymous clients call these SECURITY DEFINER helpers directly. So each one
+-- is revoked and then granted only where it is actually called from.
+--
+-- Every helper below is service-role only, because none of them is called by
+-- a client or evaluated directly in an RLS policy. They are reached only from
+-- inside other SECURITY DEFINER functions — mfa_satisfied(),
+-- mfa_enrollment_status(), is_super_admin(), is_institution_admin(),
+-- is_admin() — and a SECURITY DEFINER body runs as the function owner, so
+-- EXECUTE is checked against the owner rather than against the caller. The
+-- callers themselves keep the privileges they already had.
+--
+-- Granting them to `authenticated` would not be a harmless belt-and-braces:
+-- mfa_role_enforced_now('student') would tell any signed-in user which roles
+-- the deployment gates, which is exactly what mfa_policy_effective() is
+-- restricted to super-admins to avoid, and mfa_role_state(<uuid>) would let
+-- them probe another account's role class.
 
 REVOKE EXECUTE ON FUNCTION public.mfa_policy() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mfa_policy() TO service_role;
 
-REVOKE EXECUTE ON FUNCTION public.mfa_role_enforced_now(text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.mfa_role_enforced_now(text) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.mfa_role_enforced_now(text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mfa_role_enforced_now(text) TO service_role;
 
-REVOKE EXECUTE ON FUNCTION public.mfa_role_in_policy(text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.mfa_role_in_policy(text) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.mfa_role_in_policy(text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mfa_role_in_policy(text) TO service_role;
 
--- Would let any signed-in user enumerate another account's roles.
-REVOKE EXECUTE ON FUNCTION public.mfa_user_roles(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.mfa_user_roles(uuid)
+  FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mfa_user_roles(uuid) TO service_role;
 
--- Called from mfa_satisfied(), which RLS evaluates as the querying role, so
--- authenticated needs EXECUTE. It answers only 'required'/'recommended'/
--- 'none' and the caller must already know the uuid they are asking about.
-REVOKE EXECUTE ON FUNCTION public.mfa_role_state(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.mfa_role_state(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.mfa_role_state(uuid)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mfa_role_state(uuid) TO service_role;
 
-REVOKE EXECUTE ON FUNCTION public.mfa_user_deadline(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.mfa_user_deadline(uuid) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.mfa_user_deadline(uuid)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mfa_user_deadline(uuid) TO service_role;
+
+-- The two a client legitimately calls: one speaks only about the caller, the
+-- other only to a super-admin.
+REVOKE EXECUTE ON FUNCTION public.mfa_enrollment_status() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.mfa_enrollment_status() TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.mfa_policy_effective() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.mfa_policy_effective() TO authenticated, service_role;

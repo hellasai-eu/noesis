@@ -286,6 +286,33 @@ describe('per-role MFA policy', () => {
     expect((await status(client)).required).toBe(false);
   });
 
+  it('keeps the policy helpers out of reach of a signed-in client', async () => {
+    // The helpers are reached only from inside other SECURITY DEFINER
+    // functions, which run as their owner — so a client needs no EXECUTE on
+    // them, and granting it would undo the restriction on
+    // mfa_policy_effective: mfa_role_enforced_now('student') answers "which
+    // roles does this deployment gate?", and mfa_role_state(<uuid>) probes
+    // another account's role class.
+    const client = await signedIn(pupilEmail);
+
+    for (const [fn, args] of [
+      ['mfa_policy', {}],
+      ['mfa_role_enforced_now', { _role: 'student' }],
+      ['mfa_role_in_policy', { _role: 'student' }],
+      ['mfa_role_state', { _user_id: instructorUserId }],
+      ['mfa_user_roles', { _user_id: instructorUserId }],
+      ['mfa_user_deadline', { _user_id: instructorUserId }],
+    ] as const) {
+      const { error } = await client.rpc(fn as never, args as never);
+      expect(error, `${fn} should not be callable by authenticated`).not.toBeNull();
+    }
+
+    // And the one a client is meant to call still works — otherwise this
+    // test would pass just as well with the whole feature broken.
+    const { error: allowed } = await client.rpc('mfa_enrollment_status');
+    expect(allowed).toBeNull();
+  });
+
   it('a suspended membership confers no role, so it is not enforced on', async () => {
     // Suspension already removes authority everywhere else; enforcing MFA on
     // the strength of a membership that grants nothing would lock someone out

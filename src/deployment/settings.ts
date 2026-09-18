@@ -190,7 +190,12 @@ export function mfaPolicyRow(settings: DeploymentSettings): MfaPolicyRow {
 export function validateSettings(input: unknown): string[] {
   const problems: string[] = [];
 
-  if (typeof input !== "object" || input === null) {
+  // `Array.isArray` at the top level too, for the same reason it is needed on
+  // `mfa` below: `typeof [] === "object"`, so a `settings.json` containing
+  // `[]` would otherwise reach the `mfa === undefined` branch and be reported
+  // as a valid "use the defaults" policy. A deployment whose policy file is
+  // malformed must be told, not quietly given the privileged-role defaults.
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
     return ["settings must be an object"];
   }
 
@@ -268,10 +273,40 @@ export function validateSettings(input: unknown): string[] {
  * An instant, not a date: a bare "2026-11-01" would be read in the viewer's
  * zone by `Date` and in UTC by Postgres, which is a whole day of disagreement
  * about when people lose access.
+ *
+ * `Date.parse` alone is not enough, and the gap has teeth. It silently rolls
+ * impossible calendar dates forward — `2026-02-30T00:00:00Z` becomes March 2nd
+ * rather than failing — while Postgres rejects the same literal outright. A
+ * rejected literal is read by `mfa_role_enforced_now` as "enforce now", so a
+ * typo in a *future* deadline would lock a whole role out immediately, having
+ * passed both the build gate and `--check`. So the components are range- and
+ * round-trip-checked rather than trusted to the parser.
  */
 function isIsoInstant(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(value)) {
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.exec(
+      value,
+    );
+  if (!match) return false;
+
+  const [, y, mo, d, h, mi, s] = match.map(Number);
+
+  if (mo < 1 || mo > 12) return false;
+  if (d < 1 || d > 31) return false;
+  // 24:00:00 is a legal ISO instant but Postgres normalises it, and nobody
+  // writes a deadline that way on purpose; 23:59:59 is the intent.
+  if (h > 23 || mi > 59 || s > 59) return false;
+
+  // The round trip: Date.UTC normalises an impossible day, so if the day it
+  // gives back differs from the one written, the written one does not exist.
+  const asUtc = new Date(Date.UTC(y, mo - 1, d));
+  if (
+    asUtc.getUTCFullYear() !== y ||
+    asUtc.getUTCMonth() !== mo - 1 ||
+    asUtc.getUTCDate() !== d
+  ) {
     return false;
   }
+
   return !Number.isNaN(Date.parse(value));
 }

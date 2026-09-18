@@ -181,6 +181,19 @@ npm run --silent settings:sql | psql "$DATABASE_URL"
 `--silent` is not optional in a pipe: without it npm prints its own banner to
 stdout and `psql` receives it as SQL.
 
+### `npm run typecheck` checks *this* overlay, not yours
+
+`tsconfig.app.json` names `deployment/` statically — a tsconfig cannot read
+`DEPLOYMENT_DIR`. So the advertised typecheck validates the defaults here even
+when the build is using your directory, and a type error in your overlay
+surfaces at bundle time instead.
+
+Add your directory to the `include` array of a tsconfig in your own repository
+(or to this one, in the checkout you build from) if you want it covered. The
+runtime behaviour is unaffected either way: Vite and Vitest both resolve
+`@deployment` from `DEPLOYMENT_DIR`, so what gets built and tested is always
+your overlay.
+
 Re-running it is idempotent, and removing a role takes effect at once: anyone
 who enrolled stays enrolled, they are simply no longer required to be.
 

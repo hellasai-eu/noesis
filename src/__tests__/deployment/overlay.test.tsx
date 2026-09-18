@@ -56,6 +56,43 @@ describe("the resolved overlay", () => {
     expect(chrome).not.toMatch(/noesis|dianoisis/i);
   });
 
+  it("renders the same metadata the static HTML is built from", async () => {
+    // The brand is split in two on purpose: `vite.config.ts` reads
+    // `brand.meta.json` with readFileSync for the document head, before any
+    // module runs, while the app reads `brand.config.ts`. The convention that
+    // keeps them one source is that `brand.config.ts` spreads the JSON — but
+    // `BrandConfigInput` cannot forbid overriding a field afterwards, so an
+    // overlay is free to show one name in the app and another to a crawler.
+    //
+    // Nothing in the type system catches that, so this does. It runs against
+    // whichever overlay DEPLOYMENT_DIR selects, so a deployment's own suite
+    // checks its own two files.
+    const meta = (await import("@deployment/brand.meta.json")).default as Record<
+      string,
+      unknown
+    >;
+
+    for (const field of [
+      "name",
+      "title",
+      "description",
+      "canonicalUrl",
+      "contactEmail",
+      "poweredBy",
+      "copyright",
+      "htmlLang",
+      "twitterHandle",
+      "ogImage",
+    ] as const) {
+      if (!(field in meta)) continue; // Absent means "take the default".
+      expect(
+        brand[field],
+        `brand.config.ts overrides ${field}; the document head would still be built ` +
+          `from brand.meta.json, so the app and a crawler would disagree`,
+      ).toEqual(meta[field]);
+    }
+  });
+
   it("keeps the published legal set and the route helper in step", () => {
     expect(hasLegalDocuments).toBe(LEGAL_DOCUMENTS.length > 0);
 

@@ -1,6 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import {
   createTestHarness,
+  DEFAULT_ENV,
   FetchLogEntry,
   MockRoute,
   parseResponse,
@@ -431,9 +432,10 @@ Deno.test("admin-set-user-password: notifies the target and audits the delivery"
 
 Deno.test("admin-set-user-password: a forged Origin cannot steer the email's link", async () => {
   // The recipient here is the TARGET, not the caller. Building the button from
-  // the request's `Origin` would let an institution-admin mail a genuine,
-  // correctly-branded Noesis security notice to any of their members with the
-  // link pointing wherever they liked.
+  // the request's `Origin` would let an institution admin mail a genuine,
+  // correctly-branded security notice to any of their members with the link
+  // pointing wherever they liked. It comes from BRAND_APP_URL instead, which
+  // only whoever deploys the project can set.
   const h = createTestHarness({
     routes: [
       authUserRoute({ id: CALLER_ID, email: "admin@school.test" }),
@@ -449,13 +451,13 @@ Deno.test("admin-set-user-password: a forged Origin cannot steer the email's lin
     await h.invoke(
       handler,
       { userId: TARGET_ID, newPassword: "password123" },
-      { headers: { ...tokenWithAal("aal2"), Origin: "https://noesis-phishing.test" } },
+      { headers: { ...tokenWithAal("aal2"), Origin: "https://phishing.test" } },
     );
 
     const emailCall = h.fetchLog.find((c) => c.url.includes("api.resend.com"));
     const html = String(JSON.parse(String(emailCall?.body ?? "{}")).html ?? "");
-    assertEquals(html.includes("noesis-phishing.test"), false);
-    assertEquals(html.includes("https://dianoisis.net/auth"), true);
+    assertEquals(html.includes("phishing.test"), false);
+    assertEquals(html.includes(`${DEFAULT_ENV.BRAND_APP_URL}/auth`), true);
   } finally {
     h.cleanup();
   }

@@ -46,14 +46,17 @@ Deno.test("send-invitation: generates correct invite link", () => {
   assertEquals(inviteLink.includes(encodeURIComponent(email)), true);
 });
 
-Deno.test("send-invitation: email subject includes inviter and institution", () => {
+Deno.test("send-invitation: email subject includes inviter, institution and brand", () => {
+  // The brand name is a deployment setting (BRAND_NAME), so this asserts the
+  // subject is built from it rather than from any particular product name.
   const inviterName = "John Doe";
   const institutionName = "Test University";
-  const subject = `${inviterName} invited you to join ${institutionName} on Noesis`;
+  const brandName = "Test Brand";
+  const subject = `${inviterName} invited you to join ${institutionName} on ${brandName}`;
 
   assertEquals(subject.includes(inviterName), true);
   assertEquals(subject.includes(institutionName), true);
-  assertEquals(subject.includes("Noesis"), true);
+  assertEquals(subject.includes(brandName), true);
 });
 
 Deno.test("send-invitation: email HTML contains required elements", () => {

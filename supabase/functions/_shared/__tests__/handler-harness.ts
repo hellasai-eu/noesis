@@ -62,6 +62,14 @@ export const DEFAULT_ENV: Record<string, string> = {
   OPENAI_API_KEY: "test-openai-key",
   RESEND_API_KEY: "test-resend-key",
   CONVERTAPI_SECRET: "test-convertapi-secret",
+  // The product identity (`_shared/brand.ts`). A deployment supplies these as
+  // Supabase secrets; a handler that sends mail refuses to without them, so
+  // the harness stands in for a configured deployment. Tests that care about
+  // the unconfigured case override them with `env: { … }`.
+  BRAND_NAME: "Test Brand",
+  BRAND_FROM_EMAIL: "no-reply@test.example",
+  BRAND_CONTACT_EMAIL: "hello@test.example",
+  BRAND_APP_URL: "https://app.test.example",
 };
 
 // ── Harness factory ────────────────────────────────────────────────────

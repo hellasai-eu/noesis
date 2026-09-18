@@ -16,6 +16,7 @@
 
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logger } from "./logger.ts";
+import { edgeBrand, emailFooterText, monogram } from "./brand.ts";
 
 /** Which path changed the password — drives the copy the user reads. */
 export type PasswordChangeKind = "self_service" | "admin_reset";
@@ -28,21 +29,24 @@ export interface PasswordChangeNotice {
   kind: PasswordChangeKind;
 }
 
-const FROM = "Noesis <me@dianoisis.net>";
-
 /**
- * Hard-coded, NOT derived from the request's `Origin` (#1232 review).
+ * The sender and the sign-in link come from `BRAND_*` environment variables
+ * (`_shared/brand.ts`), and emphatically NOT from the request's `Origin`
+ * (#1232 review).
  *
- * `Origin` is a request header: the browser sets it honestly, but a direct HTTP
- * call sets it to anything. This is a security email — the one message a user is
- * most primed to click — and its recipient is the account holder, who for an
- * admin reset is NOT the caller. Building the button from request metadata would
- * let an institution-admin mail a genuine, correctly-branded Noesis security
- * notice to any of their members with the link pointing at a site of their
- * choosing. There is no per-deployment link to preserve here: the button says
- * "go to Noesis", so a constant is both safer and sufficient.
+ * `Origin` is a request header: the browser sets it honestly, but a direct
+ * HTTP call sets it to anything. This is a security email — the one message a
+ * user is most primed to click — and its recipient is the account holder, who
+ * for an admin reset is NOT the caller. Building the button from request
+ * metadata would let an institution admin mail a genuine, correctly-branded
+ * security notice to any of their members with the link pointing at a site of
+ * their choosing.
+ *
+ * An operator-set environment variable is not request metadata: only whoever
+ * deploys the project can set it, which is the same trust level as the code.
+ * So `BRAND_APP_URL` is safe here where `Origin` is not — and when it is
+ * unset the button is dropped rather than pointed anywhere.
  */
-const SIGN_IN_LINK = "https://dianoisis.net/auth";
 
 const escapeHtml = (value: string) =>
   value
@@ -55,19 +59,33 @@ const escapeHtml = (value: string) =>
 const generateEmailHtml = (
   greetingName: string | null,
   kind: PasswordChangeKind,
-  signInLink: string,
+  signInLink: string | null,
+  brandName: string,
+  footer: string,
 ) => {
   const headline = kind === "admin_reset"
     ? "Your password was reset by an administrator"
     : "Your password was changed";
 
   const lead = kind === "admin_reset"
-    ? "An administrator at your institution set a new password for your Noesis account. Use the new password the next time you sign in."
-    : "The password for your Noesis account was just changed.";
+    ? `An administrator at your institution set a new password for your ${brandName} account. Use the new password the next time you sign in.`
+    : `The password for your ${brandName} account was just changed.`;
 
   const warning = kind === "admin_reset"
     ? "If you were not expecting this, contact your institution administrator immediately."
     : "If you did not make this change, your account may be compromised. Reset your password immediately and contact your institution administrator.";
+
+  const button = signInLink
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${escapeHtml(signInLink)}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 14px 40px; border-radius: 10px; font-weight: 700; font-size: 16px;">
+                      Go to ${escapeHtml(brandName)} &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>`
+    : "";
 
   return `
 <!DOCTYPE html>
@@ -86,9 +104,9 @@ const generateEmailHtml = (
           <tr>
             <td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); padding: 40px; text-align: center;">
               <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%); border-radius: 16px; margin: 0 auto 20px;">
-                <span style="font-size: 32px; color: #1a1a2e; font-weight: bold; line-height: 64px;">&nu;</span>
+                <span style="font-size: 32px; color: #1a1a2e; font-weight: bold; line-height: 64px;">${escapeHtml(monogram(brandName))}</span>
               </div>
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Noesis</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">${escapeHtml(brandName)}</h1>
               <p style="color: #a0a0b0; margin: 8px 0 0; font-size: 14px;">Security notification</p>
             </td>
           </tr>
@@ -109,19 +127,11 @@ const generateEmailHtml = (
                 </p>
               </div>
 
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td align="center">
-                    <a href="${escapeHtml(signInLink)}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 14px 40px; border-radius: 10px; font-weight: 700; font-size: 16px;">
-                      Go to Noesis &rarr;
-                    </a>
-                  </td>
-                </tr>
-              </table>
+              ${button}
 
               <p style="color: #9ca3af; margin: 28px 0 0; font-size: 13px; text-align: center; line-height: 1.6;">
                 For your security this message contains no password details.
-                Noesis will never ask you for your password by email.
+                ${escapeHtml(brandName)} will never ask you for your password by email.
               </p>
             </td>
           </tr>
@@ -130,7 +140,7 @@ const generateEmailHtml = (
           <tr>
             <td style="background: #f8f9fa; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-                &copy; ${new Date().getFullYear()} Noesis. Empowering education with AI.
+                ${escapeHtml(footer)}
               </p>
             </td>
           </tr>
@@ -161,22 +171,37 @@ export async function sendPasswordChangeNotice(
       return false;
     }
 
+    const brand = edgeBrand();
+    if (!brand.from) {
+      // No verified sending address configured. Sending as another
+      // deployment's domain is worse than not sending, and this notice is
+      // best-effort by design — the caller records the outcome either way.
+      logger.warn("BRAND_FROM_EMAIL not configured, skipping password change notice");
+      return false;
+    }
+
     if (!notice.email) {
       logger.warn("No recipient address for password change notice", { kind: notice.kind });
       return false;
     }
 
     const subject = notice.kind === "admin_reset"
-      ? "Your Noesis password was reset by an administrator"
-      : "Your Noesis password was changed";
+      ? `Your ${brand.name} password was reset by an administrator`
+      : `Your ${brand.name} password was changed`;
 
     const resend = new Resend(apiKey);
     const endTimer = logger.startTimer("password-change-notice-email");
     const response = await resend.emails.send({
-      from: FROM,
+      from: brand.from,
       to: [notice.email],
       subject,
-      html: generateEmailHtml(notice.fullName ?? null, notice.kind, SIGN_IN_LINK),
+      html: generateEmailHtml(
+        notice.fullName ?? null,
+        notice.kind,
+        brand.signInUrl,
+        brand.name,
+        emailFooterText(brand),
+      ),
     });
     endTimer();
 

@@ -3,6 +3,11 @@ import { CheckCircle2, ShieldAlert, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { declaredMfaPolicy, type MfaPolicyRow } from "@/deployment";
+import {
+  diffPolicies,
+  roleLabel,
+  whenLabel,
+} from "@/lib/mfa-policy-drift";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -24,67 +29,10 @@ import { cn } from "@/lib/utils";
  *
  * Super-admins only, because `mfa_policy_effective()` returns null to everyone
  * else — this panel is for the person who can fix it.
- */
-
-const ROLE_LABEL: Record<string, string> = {
-  super_admin: "Super admins",
-  admin: "Institution admins",
-  instructor: "Instructors",
-  evaluator: "Evaluators",
-  student: "Students",
-};
-
-const roleLabel = (role: string) => ROLE_LABEL[role] ?? role;
-
-/** "immediately", or the date enforcement begins. */
-function whenLabel(value: string | null): string {
-  if (value === null) return "immediately";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return `invalid date (${value})`;
-  // The stored value is a UTC instant; format its UTC date so a reader west
-  // of UTC is not shown the previous day.
-  return `from ${parsed.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  })}`;
-}
-
-/**
- * Compares the two policies role by role.
  *
- * Deliberately not a deep-equal on the objects: an operator needs to know
- * *which* role disagrees, and the two are written by different tools (one
- * sorts its keys, the other is whatever Postgres returns), so object identity
- * would report false differences.
+ * The comparison itself lives in `@/lib/mfa-policy-drift`, so it can be tested
+ * without a Supabase client; this file is the rendering.
  */
-function diffPolicies(declared: MfaPolicyRow, live: MfaPolicyRow) {
-  const roles = [...new Set([...Object.keys(declared), ...Object.keys(live)])].sort();
-  return roles.map((role) => {
-    const inDeclared = role in declared;
-    const inLive = role in live;
-    const declaredWhen = declared[role] ?? null;
-    const liveWhen = live[role] ?? null;
-    return {
-      role,
-      inDeclared,
-      inLive,
-      declaredWhen,
-      liveWhen,
-      agrees: inDeclared && inLive && sameInstant(declaredWhen, liveWhen),
-    };
-  });
-}
-
-/** Both null, or both parsing to the same instant — "Z" and "+00:00" agree. */
-function sameInstant(a: string | null, b: string | null): boolean {
-  if (a === null || b === null) return a === b;
-  const left = Date.parse(a);
-  const right = Date.parse(b);
-  if (Number.isNaN(left) || Number.isNaN(right)) return a === b;
-  return left === right;
-}
 
 export function MfaPolicyPanel() {
   const { data, isLoading, error } = useQuery({

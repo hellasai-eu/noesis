@@ -18,7 +18,13 @@ import {
   legalPath,
   primaryLegalLanguage,
 } from "@/deployment";
-import { defineBrand, defineLegal, BRAND_META_DEFAULTS } from "@/deployment/contract";
+import {
+  defineBrand,
+  defineLegal,
+  resolveBrandMeta,
+  BRAND_META_DEFAULTS,
+  type BrandMeta,
+} from "@/deployment/contract";
 
 /**
  * The deployment overlay is what makes this repository deployable by somebody
@@ -67,29 +73,23 @@ describe("the resolved overlay", () => {
     // Nothing in the type system catches that, so this does. It runs against
     // whichever overlay DEPLOYMENT_DIR selects, so a deployment's own suite
     // checks its own two files.
-    const meta = (await import("@deployment/brand.meta.json")).default as Record<
-      string,
-      unknown
-    >;
+    //
+    // Compared against `resolveBrandMeta(meta)` rather than against the raw
+    // JSON, because that is exactly what the build head is made of — defaults
+    // and the title-follows-name rule included. Checking only the keys present
+    // in the file would miss the more likely mistake: an overlay that sets
+    // `name` in JSON and overrides the *derived* `title` in the config, where
+    // the head would carry the derived value and the app the override.
+    const meta = (await import("@deployment/brand.meta.json")).default;
+    const fromHead = resolveBrandMeta(meta as Partial<BrandMeta>);
 
-    for (const field of [
-      "name",
-      "title",
-      "description",
-      "canonicalUrl",
-      "contactEmail",
-      "poweredBy",
-      "copyright",
-      "htmlLang",
-      "twitterHandle",
-      "ogImage",
-    ] as const) {
-      if (!(field in meta)) continue; // Absent means "take the default".
+    for (const key of Object.keys(fromHead) as (keyof BrandMeta)[]) {
       expect(
-        brand[field],
-        `brand.config.ts overrides ${field}; the document head would still be built ` +
-          `from brand.meta.json, so the app and a crawler would disagree`,
-      ).toEqual(meta[field]);
+        brand[key],
+        `brand.config.ts and brand.meta.json disagree about "${key}". The document ` +
+          `head is built from the JSON and the app reads the config, so a crawler ` +
+          `and a visitor would see different values.`,
+      ).toEqual(fromHead[key]);
     }
   });
 

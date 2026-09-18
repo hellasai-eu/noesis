@@ -282,7 +282,7 @@ export function validateSettings(input: unknown): string[] {
  * passed both the build gate and `--check`. So the components are range- and
  * round-trip-checked rather than trusted to the parser.
  */
-function isIsoInstant(value: string): boolean {
+export function isIsoInstant(value: string): boolean {
   const match =
     /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.exec(
       value,

@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { SignupAgreement } from "@/components/SignupAgreement";
-import { BookOpen, Loader2, Lock, ArrowLeft, Mail, ShieldCheck } from "lucide-react";
+import { Loader2, Lock, ArrowLeft, Mail, ShieldCheck } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
+import { brand } from "@/deployment";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +24,21 @@ const emailSchema = z.string().email("Please enter a valid email address");
 // may hold shorter passwords, and the server is the judge of a login anyway.
 // New passwords go through the shared policy mirror in lib/password-policy.
 const signInPasswordSchema = z.string().min(1, "Please enter your password");
+
+/**
+ * The "express interest" mailto, built once from the configured address.
+ *
+ * `null` when the overlay supplies none, which hides the button — the address
+ * used to be a literal in the markup, which meant every deployment of this
+ * repository pointed prospective schools at one particular operator's inbox.
+ */
+const interestMailto = brand.contactEmail
+  ? `mailto:${brand.contactEmail}` +
+    `?subject=${encodeURIComponent(`Interest in ${brand.name}`)}` +
+    `&body=${encodeURIComponent(
+      `Hello,\n\nI am interested in learning more about ${brand.name} for my institution.\n\nName: \nInstitution: \nRole: \n\nThank you!`,
+    )}`
+  : null;
 
 interface InvitationData {
   id: string;
@@ -392,12 +409,7 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <nav className="container mx-auto px-6 py-6">
-        <Link to="/" className="flex items-center gap-3 w-fit">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="text-2xl font-display font-bold text-foreground">Noesis</span>
-        </Link>
+        <BrandMark to="/" size="lg" />
       </nav>
 
       {/* Auth Form */}
@@ -411,7 +423,7 @@ const Auth = () => {
                   ? `Join ${invitationData.institution_name}`
                   : showForgotPassword
                     ? "Reset Password"
-                    : "Welcome to Noesis"}
+                    : `Welcome to ${brand.name}`}
             </CardTitle>
             <CardDescription>
               {mfaChallengeRequired
@@ -710,17 +722,22 @@ const Auth = () => {
                     <p className="text-xs text-center text-muted-foreground mb-3">
                       Contact your institution administrator to receive an invitation.
                     </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      asChild
-                    >
-                      <a href="mailto:me@dianoisis.net?subject=Interest%20in%20Noesis%20Platform&body=Hello%2C%0A%0AI%20am%20interested%20in%20learning%20more%20about%20Noesis%20for%20my%20institution.%0A%0AName%3A%20%0AInstitution%3A%20%0ARole%3A%20%0A%0AThank%20you!">
-                        <Mail className="w-4 h-4 mr-2" />
-                        Contact Us to Express Interest
-                      </a>
-                    </Button>
+                    {/* Only when the deployment overlay supplies an address.
+                        An unconfigured clone must not invite a stranger to
+                        mail whoever happened to be hardcoded here. */}
+                    {interestMailto && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        asChild
+                      >
+                        <a href={interestMailto}>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Contact Us to Express Interest
+                        </a>
+                      </Button>
+                    )}
                   </form>
                 </TabsContent>
               </Tabs>

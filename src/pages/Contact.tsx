@@ -9,6 +9,7 @@ import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { brand } from "@/deployment";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -88,7 +89,7 @@ const Contact = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </button>
-          <h1 className="text-xl font-semibold text-foreground">Noesis</h1>
+          <h1 className="text-xl font-semibold text-foreground">{brand.name}</h1>
         </div>
       </header>
 

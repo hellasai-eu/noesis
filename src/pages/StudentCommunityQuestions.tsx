@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { brand } from "@/deployment";
 
 export default function StudentCommunityQuestions() {
   const { t } = useTranslation("practice");
@@ -116,7 +117,7 @@ export default function StudentCommunityQuestions() {
               interface copy. Legal and AI-content wording is a separate track,
               and a translation that drifts from the English notice is worse
               than an English one. */}
-          These questions and answers have been created by Noesis AI on behalf of students and have not been reviewed or curated by instructors. They may contain errors.
+          These questions and answers have been created by {brand.name} AI on behalf of students and have not been reviewed or curated by instructors. They may contain errors.
         </AlertDescription>
       </Alert>
 

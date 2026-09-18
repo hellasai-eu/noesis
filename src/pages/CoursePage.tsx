@@ -94,6 +94,7 @@ import {
   Youtube,
   ImagePlus,
 } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 import AIInteractiveQuestions from "@/components/AIInteractiveQuestions";
 import UnifiedQuestionBank from "@/components/UnifiedQuestionBank";
 import OpenQuestionChatHistory from "@/components/OpenQuestionChatHistory";
@@ -1645,12 +1646,7 @@ const CoursePage = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-display font-bold text-foreground">Noesis</span>
-            </div>
+            <BrandMark />
             <InstructorHomeButton />
           </div>
         </div>

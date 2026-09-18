@@ -88,6 +88,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BrandLogo, BrandMark } from "@/components/BrandMark";
+import { brand } from "@/deployment";
 import { toast } from "sonner";
 import { clearSelectedInstitutionId, setSelectedInstitutionId } from "@/lib/selected-institution";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -1004,12 +1006,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-background">
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-display font-bold text-foreground">Noesis</span>
-            </div>
+            <BrandMark />
             <Button variant="ghost" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
@@ -1096,14 +1093,12 @@ const Dashboard = () => {
                 alt={institution?.name ? `${institution.name} institution logo` : "Institution logo"}
                 wrapperClassName="w-10 h-10"
                 className="w-full h-full rounded-lg object-contain"
-                fallback={
-                  <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                }
+                fallback={<BrandLogo />}
               />
               <div>
-                <span className="text-xl font-display font-bold text-foreground">Noesis</span>
+                <span className="text-xl font-display font-bold text-foreground">
+                  {brand.name}
+                </span>
                 {institution && (
                   <p className="text-xs text-muted-foreground">{institution.name}</p>
                 )}

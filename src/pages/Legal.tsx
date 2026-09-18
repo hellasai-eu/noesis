@@ -8,41 +8,45 @@ import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   LEGAL_DOCUMENTS,
-  operatorPlaceholderPattern,
+  brand,
+  legal,
   legalDocumentBySlug,
+  legalPath,
+  operatorPlaceholderPattern,
+  primaryLegalLanguage,
   type LegalLanguage,
-} from "@/content/legal";
+} from "@/deployment";
 import { cn } from "@/lib/utils";
 
 /**
  * The public legal pages (issue #937).
  *
- * Renders the markdown from `docs/compliance/legal/` verbatim — the compliance
- * set is the source of truth and this page is a viewer, not a second copy.
+ * Renders the markdown the deployment overlay publishes, verbatim. The overlay's
+ * `legal.config.ts` is the source of truth for what exists, in what languages
+ * and in what order; this page is a viewer, not a second copy. See
+ * `deployment/README.md`.
  *
  * No session is read and no data is fetched, so the pages work signed out,
  * which is the point: a school evaluating the platform must be able to read
  * them before anyone has an account.
  *
- * Greek is the default because it is the binding text for a Greek school. The
- * English toggle is a reference translation and says so.
+ * The first language the overlay declares is the one the page opens in and the
+ * one it treats as binding — Greek, for a Greek school. Anything after it is
+ * offered as a reference translation and says so.
  */
-
-const LANGUAGE_LABEL: Record<LegalLanguage, string> = { el: "Ελληνικά", en: "English" };
 
 const BACK_LABEL: Record<LegalLanguage, string> = { el: "Αρχική", en: "Home" };
 
-const TRANSLATION_NOTE: Record<LegalLanguage, string | null> = {
-  el: null,
-  en: "Reference translation. The Greek version is the binding text.",
+const NAV_LABEL: Record<LegalLanguage, string> = {
+  el: "Νομικές πληροφορίες",
+  en: "Legal",
 };
 
 /**
  * `[OPERATOR: …]` markers are real content in a draft — the operator's private
- * open-items register tracks each one (`docs/compliance/README.md`) — but
- * dropped into running prose they read like a typo. Marking them keeps the page
- * honest about being unfinished, and makes one impossible to miss on the day
- * the drafts go final.
+ * open-items register tracks each one — but dropped into running prose they
+ * read like a typo. Marking them keeps the page honest about being unfinished,
+ * and makes one impossible to miss on the day the drafts go final.
  */
 function markPlaceholders(markdown: string): string {
   return markdown.replace(operatorPlaceholderPattern(), (_match, body: string) => {
@@ -123,7 +127,11 @@ export const LegalMarkdown = ({
 
 export const Legal = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [language, setLanguage] = useState<LegalLanguage>("el");
+  // `primaryLegalLanguage` is null only when the overlay publishes nothing, in
+  // which case App.tsx does not register this route at all.
+  const [language, setLanguage] = useState<LegalLanguage>(
+    primaryLegalLanguage ?? "en",
+  );
 
   const doc = slug ? legalDocumentBySlug(slug) : undefined;
 
@@ -133,7 +141,7 @@ export const Legal = () => {
     // The pages must be indexable, and a single-page app has one static title
     // and description unless a page sets its own.
     const previousTitle = document.title;
-    document.title = `${doc.label[language]} · Noesis`;
+    document.title = `${doc.label[language]} · ${brand.name}`;
 
     let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     const created = !meta;
@@ -153,8 +161,15 @@ export const Legal = () => {
   }, [doc, language]);
 
   if (!doc) {
-    return <Navigate to="/legal/privacy" replace />;
+    // `/legal` with no slug, or a slug the overlay does not publish. The first
+    // document is the entry point rather than a 404, so a stale link to a
+    // renamed document still lands somewhere useful.
+    return <Navigate to={legalPath(LEGAL_DOCUMENTS[0].slug)} replace />;
   }
+
+  // A note only on the languages that are not the binding one.
+  const translationNote =
+    language === primaryLegalLanguage ? null : legal.translationNote[language];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -167,11 +182,14 @@ export const Legal = () => {
             </Link>
           </Button>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <nav
+            aria-label={NAV_LABEL[language]}
+            className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+          >
             {LEGAL_DOCUMENTS.map((other) => (
               <Link
                 key={other.slug}
-                to={other.path}
+                to={legalPath(other.slug)}
                 aria-current={other.slug === doc.slug ? "page" : undefined}
                 className={cn(
                   "transition-colors",
@@ -183,27 +201,31 @@ export const Legal = () => {
                 {other.label[language]}
               </Link>
             ))}
-          </div>
+          </nav>
 
-          <div className="ms-auto flex items-center gap-1" role="group" aria-label="Language">
-            {(["el", "en"] as const).map((code) => (
-              <Button
-                key={code}
-                variant={language === code ? "secondary" : "ghost"}
-                size="sm"
-                aria-pressed={language === code}
-                onClick={() => setLanguage(code)}
-              >
-                {LANGUAGE_LABEL[code]}
-              </Button>
-            ))}
-          </div>
+          {/* A single-language overlay gets no toggle rather than one button
+              that does nothing. */}
+          {legal.languages.length > 1 && (
+            <div className="ms-auto flex items-center gap-1" role="group" aria-label="Language">
+              {legal.languages.map((code) => (
+                <Button
+                  key={code}
+                  variant={language === code ? "secondary" : "ghost"}
+                  size="sm"
+                  aria-pressed={language === code}
+                  onClick={() => setLanguage(code)}
+                >
+                  {legal.languageLabels[code]}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </nav>
 
       <main className="flex-1 container mx-auto px-6 py-10 max-w-3xl w-full">
-        {TRANSLATION_NOTE[language] && (
-          <p className="mb-6 text-xs text-muted-foreground">{TRANSLATION_NOTE[language]}</p>
+        {translationNote && (
+          <p className="mb-6 text-xs text-muted-foreground">{translationNote}</p>
         )}
 
         <LegalMarkdown markdown={doc.body[language]} language={language} />

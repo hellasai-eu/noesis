@@ -18,6 +18,8 @@ import {
   User,
 } from "lucide-react";
 import { toast } from "sonner";
+import { BrandMark } from "@/components/BrandMark";
+import { brand } from "@/deployment";
 
 interface Institution {
   id: string;
@@ -288,17 +290,7 @@ const InstitutionPage = () => {
       <div className="min-h-screen bg-background">
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <span className="text-xl font-display font-bold text-foreground">
-                  {institution?.name}
-                </span>
-                <p className="text-xs text-muted-foreground">Powered by Noesis</p>
-              </div>
-            </div>
+            <BrandMark name={institution?.name} subtitle={brand.poweredBy} />
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
             </Button>
@@ -327,17 +319,7 @@ const InstitutionPage = () => {
       {/* Header */}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="text-xl font-display font-bold text-foreground">
-                {institution?.name}
-              </span>
-              <p className="text-xs text-muted-foreground">Powered by Noesis</p>
-            </div>
-          </div>
+          <BrandMark name={institution?.name} subtitle={brand.poweredBy} />
           {user && (
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">

@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getCountryName } from "@/lib/country-options";
 import { toast } from "sonner";
 import {
-  BookOpen,
   LogOut,
   Loader2,
   Building,
@@ -21,6 +20,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { clearSelectedInstitutionId, setSelectedInstitutionId } from "@/lib/selected-institution";
+import { BrandMark } from "@/components/BrandMark";
 
 interface Institution {
   id: string;
@@ -220,12 +220,7 @@ const SelectInstitution = () => {
       <div className="min-h-screen bg-background">
         <nav className="border-b border-border bg-card">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-display font-bold text-foreground">Noesis</span>
-            </div>
+            <BrandMark />
             <Button variant="ghost" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
@@ -259,19 +254,15 @@ const SelectInstitution = () => {
       {/* Navigation */}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="text-xl font-display font-bold text-foreground">Noesis</span>
-              {isSuperAdmin && (
+          <BrandMark
+            badge={
+              isSuperAdmin && (
                 <span className="ml-2 text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
                   Super Admin
                 </span>
-              )}
-            </div>
-          </div>
+              )
+            }
+          />
           <div className="flex items-center gap-2">
             {isSuperAdmin && (
               <Button variant="outline" onClick={() => navigate("/super-admin")}>

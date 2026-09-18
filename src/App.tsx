@@ -6,11 +6,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AuthProvider } from "@/hooks/useAuth";
+import { hasLegalDocuments } from "@/deployment";
 import { LocaleProvider } from "@/i18n/LocaleProvider";
 import { NewVersionBanner } from "@/components/NewVersionBanner";
 import { MfaEnrollmentGate } from "@/components/MfaEnrollmentGate";
 import { GlobalFooter } from "@/components/GlobalFooter";
-import Index from "./pages/Index";
+// `/` belongs to the deployment overlay, not to this repository — there is no
+// `pages/Index` to import. The default overlay redirects to the sign-in screen;
+// a deployment replaces it with whatever it wants a visitor to land on. See
+// `deployment/README.md`.
+import Landing from "@deployment/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import InstructorHome from "./pages/InstructorHome";
@@ -60,7 +65,7 @@ const App = () => (
             <Analytics />
             <SpeedInsights />
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/select-institution" element={<SelectInstitution />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -96,9 +101,19 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/jobs" element={<JobsPage />} />
               {/* Public, no session required — a school must be able to read
-                  these before anyone has an account (#937). */}
-              <Route path="/legal" element={<Legal />} />
-              <Route path="/legal/:slug" element={<Legal />} />
+                  these before anyone has an account (#937).
+
+                  Registered only when the deployment overlay actually publishes
+                  documents. An overlay that serves its policies elsewhere sets
+                  `languages: []`, and then `/legal` must fall through to the
+                  404 rather than render an empty shell that looks like the
+                  real thing. */}
+              {hasLegalDocuments && (
+                <>
+                  <Route path="/legal" element={<Legal />} />
+                  <Route path="/legal/:slug" element={<Legal />} />
+                </>
+              )}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

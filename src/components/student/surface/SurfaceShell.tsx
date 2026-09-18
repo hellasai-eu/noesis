@@ -25,6 +25,7 @@ import { MfaSettingsDialog } from "@/components/MfaSettingsDialog";
 import { NotificationBell } from "@/components/NotificationBell";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BrandMark } from "@/components/BrandMark";
 
 /**
  * The chrome around the student surface: the bar every student page has had,
@@ -74,14 +75,14 @@ export function SurfaceShell({
     <div className="flex min-h-screen flex-col bg-background">
       <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between gap-2 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary sm:h-10 sm:w-10">
-              <GraduationCap className="h-5 w-5 text-primary-foreground sm:h-6 sm:w-6" />
-            </div>
-            <span className="hidden font-display text-lg font-bold text-foreground xs:inline sm:text-xl">
-              Noesis
-            </span>
-          </div>
+          {/* The mortarboard says which surface you are on; the mark and name
+              are still the product's. */}
+          <BrandMark
+            size="responsive"
+            icon={GraduationCap}
+            nameClassName="hidden xs:inline"
+            className="gap-2 sm:gap-3"
+          />
 
           <div className="flex items-center gap-2 sm:gap-4">
             {isViewingAsStudent && isAdmin && (

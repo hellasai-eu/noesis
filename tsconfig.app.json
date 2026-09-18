@@ -22,9 +22,14 @@
     "noFallthroughCasesInSwitch": false,
 
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@deployment/*": ["./deployment/*"]
     }
   },
-  "include": ["src"]
+  /* `deployment/` is checked alongside `src/` so an overlay's configs are
+     type-checked against the contract they implement. A deployment that points
+     DEPLOYMENT_DIR elsewhere should add its own directory here too. */
+  "include": ["src", "deployment"]
 }

@@ -12,6 +12,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -b",
     "check:dialog-scroll": "./scripts/check-dialog-scroll.sh",
+    "settings:sql": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/emit-settings-sql.ts",
+    "brand:env": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/emit-brand-env.ts",
     "preview": "vite preview",
     "test": "deno test --allow-net --allow-env --allow-read supabase/functions/_shared/__tests__/",
     "test:watch": "deno test --watch --allow-net --allow-env --allow-read supabase/functions/_shared/__tests__/",

@@ -4,8 +4,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@deployment/*": ["./deployment/*"]
     },
+    "resolveJsonModule": true,
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "skipLibCheck": true,

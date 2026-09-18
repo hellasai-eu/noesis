@@ -18,7 +18,7 @@ import legalConfig from "@deployment/legal.config";
 import settingsConfig from "@deployment/settings.config";
 
 import type { LegalDocument, LegalLanguage } from "./contract";
-import { mfaPolicyRow, type MfaRole } from "./settings";
+import { mfaPolicyRow } from "./settings";
 
 export type {
   BrandConfig,
@@ -59,12 +59,6 @@ export const settings = settingsConfig;
 
 /** The declared MFA policy in the shape the database stores it. */
 export const declaredMfaPolicy = mfaPolicyRow(settingsConfig);
-
-/**
- * Whether the declared policy names a role at all — used only to decide
- * whether it is worth showing the operator a policy panel.
- */
-export const mfaEnforcedRoles: MfaRole[] = settingsConfig.mfa.enforceForRoles;
 
 /** Published legal documents and the languages they come in. */
 export const legal = legalConfig;

@@ -6,6 +6,7 @@ import {
   defineSettings,
   mfaPolicyRow,
   validateSettings,
+  type DeploymentSettingsInput,
 } from "@/deployment/settings";
 import { declaredMfaPolicy, settings } from "@/deployment";
 
@@ -37,7 +38,7 @@ describe("defineSettings", () => {
     const fromJson: unknown = JSON.parse(
       '{"mfa":{"enforceForRoles":["instructor"],"deadlines":{"instructor":"2026-12-01T00:00:00Z"}}}',
     );
-    const result = defineSettings(fromJson as Parameters<typeof defineSettings>[0]);
+    const result = defineSettings(fromJson as DeploymentSettingsInput);
     expect(result.mfa.enforceForRoles).toEqual(["instructor"]);
   });
 

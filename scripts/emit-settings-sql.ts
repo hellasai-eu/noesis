@@ -32,6 +32,7 @@ import {
   defineSettings,
   mfaPolicyRow,
   validateSettings,
+  type DeploymentSettingsInput,
 } from "../src/deployment/settings.ts";
 import { resolveDeploymentDir } from "./deployment-dir.ts";
 
@@ -78,7 +79,9 @@ if (problems.length > 0) {
   );
 }
 
-const policy = mfaPolicyRow(defineSettings(raw as Parameters<typeof defineSettings>[0]));
+// Safe by the check above: validateSettings has already rejected anything
+// that is not a usable policy, so this is a narrowing, not a hope.
+const policy = mfaPolicyRow(defineSettings(raw as DeploymentSettingsInput));
 const policyJson = JSON.stringify(policy, null, 2);
 
 if (checkOnly) {

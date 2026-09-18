@@ -1,4 +1,4 @@
-import { isIsoInstant, type MfaPolicyRow } from "@/deployment/settings";
+import type { MfaPolicyRow } from "@/deployment/settings";
 
 /**
  * Comparing the declared MFA policy with the live one.
@@ -7,13 +7,25 @@ import { isIsoInstant, type MfaPolicyRow } from "@/deployment/settings";
  * without mounting a component or standing up a Supabase client — the
  * convention the newer surfaces in this repository follow.
  *
- * The obligation these helpers carry is worth stating, because it is easy to
- * lose to a convenience: **never describe the live policy more favourably
- * than Postgres will act on it.** `mfa_role_enforced_now` reads a date
- * Postgres cannot cast as "enforce now", while `new Date` happily rolls
- * `2026-02-30` forward to March 2nd. Built on `new Date`, this panel would
- * announce a future deadline for a role that is already gated — on the exact
- * screen an operator opened to find out why.
+ * ## Why nothing here parses a live date
+ *
+ * The obligation this panel carries is to never describe the live policy
+ * differently from how Postgres will act on it. Deciding that in JavaScript
+ * cannot be done, and both ways of getting it wrong are equally misleading on
+ * the one screen an operator opens when a role is unexpectedly locked out:
+ *
+ * - `new Date("2026-02-30T00:00:00Z")` rolls forward to March 2nd, while
+ *   Postgres rejects the literal and enforces the role *immediately*. A
+ *   lockout hidden behind a date months away.
+ * - Postgres accepts far more than any ISO subset a frontend would check for
+ *   — `2026-11-01 00:00:00+00` is a perfectly good `timestamptz`. Validating
+ *   against a strict subset cries wolf about a deadline that is working.
+ *
+ * So `mfa_policy_effective()` returns the database's own interpretation —
+ * whether the value is readable, the instant it normalises to, and whether
+ * the role is enforced *right now* — and this module only formats it. The
+ * declared side is different: the build already refuses anything that is not
+ * canonical, so it is safe to format directly.
  */
 
 const ROLE_LABEL: Record<string, string> = {
@@ -26,38 +38,54 @@ const ROLE_LABEL: Record<string, string> = {
 
 export const roleLabel = (role: string) => ROLE_LABEL[role] ?? role;
 
-/**
- * "immediately", or the date enforcement begins, or a plain statement that
- * the stored value is not a date the database will accept.
- */
-export function whenLabel(value: string | null): string {
-  if (value === null) return "immediately";
-  if (!isIsoInstant(value)) {
-    return `invalid date (${value}) — enforced immediately`;
-  }
-  // The stored value is a UTC instant; format its UTC date so a reader west
-  // of UTC is not shown the previous day.
-  return `from ${new Date(value).toLocaleDateString(undefined, {
+/** One role's entry in `mfa_policy_effective()`. */
+export interface LivePolicyEntry {
+  /** The stored text, verbatim. `null` means "immediately". */
+  raw: string | null;
+  /** `raw` normalised to an ISO instant, or `null` when there is no date. */
+  starts_at: string | null;
+  /** `false` when Postgres cannot read `raw` as a timestamptz. */
+  valid: boolean;
+  /** What the database says about enforcement at this moment. */
+  enforced_now: boolean;
+}
+
+export type LivePolicy = Record<string, LivePolicyEntry>;
+
+/** A UTC date, so a reader west of UTC is not shown the previous day. */
+function formatUtcDate(instant: string): string {
+  return new Date(instant).toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",
     day: "numeric",
     timeZone: "UTC",
-  })}`;
+  });
 }
 
 /**
- * Both null, or both naming the same instant — so "Z" and "+00:00" agree.
+ * How the database will treat this role, in words.
  *
- * A value Postgres would reject never agrees with one it would accept, even
- * when `Date.parse` maps them to the same moment. `2026-02-30` parses to the
- * same instant as `2026-03-02`, but the database rejects the first and
- * enforces the role immediately; reporting that as agreement would hide the
- * one row the operator needs to fix.
+ * Driven by `enforced_now` and `valid` rather than by re-reading the date,
+ * so the label cannot disagree with the enforcement.
  */
-export function sameInstant(a: string | null, b: string | null): boolean {
-  if (a === null || b === null) return a === b;
-  if (!isIsoInstant(a) || !isIsoInstant(b)) return a === b;
-  return Date.parse(a) === Date.parse(b);
+export function liveLabel(entry: LivePolicyEntry): string {
+  if (!entry.valid) {
+    // Postgres could not read it, and `mfa_role_enforced_now` reads an
+    // unreadable value as "enforce". Say both parts.
+    return `unreadable date (${entry.raw}) — enforced immediately`;
+  }
+  if (entry.starts_at === null) return "immediately";
+  if (entry.enforced_now) return `since ${formatUtcDate(entry.starts_at)}`;
+  return `from ${formatUtcDate(entry.starts_at)}`;
+}
+
+/**
+ * The declared side, which the build has already validated as a canonical ISO
+ * instant — so this one may format directly.
+ */
+export function declaredLabel(value: string | null): string {
+  if (value === null) return "immediately";
+  return `from ${formatUtcDate(value)}`;
 }
 
 export interface PolicyDiffRow {
@@ -65,7 +93,7 @@ export interface PolicyDiffRow {
   inDeclared: boolean;
   inLive: boolean;
   declaredWhen: string | null;
-  liveWhen: string | null;
+  live: LivePolicyEntry | null;
   agrees: boolean;
 }
 
@@ -73,27 +101,33 @@ export interface PolicyDiffRow {
  * Compares the two policies role by role.
  *
  * Deliberately not a deep-equal on the objects: an operator needs to know
- * *which* role disagrees, and the two are written by different tools (one
- * sorts its keys, the other is whatever Postgres returns), so object identity
- * would report false differences.
+ * *which* role disagrees, and the two are written by different tools, so
+ * object identity would report false differences.
+ *
+ * Agreement compares the declared instant with the database's *normalised*
+ * one, which is what makes `2026-11-01T00:00:00Z` and
+ * `2026-11-01 00:00:00+00` agree — the same moment, differently spelled, and
+ * not drift. A value Postgres cannot read never agrees with one it can.
  */
-export function diffPolicies(
-  declared: MfaPolicyRow,
-  live: MfaPolicyRow,
-): PolicyDiffRow[] {
+export function diffPolicies(declared: MfaPolicyRow, live: LivePolicy): PolicyDiffRow[] {
   const roles = [...new Set([...Object.keys(declared), ...Object.keys(live)])].sort();
   return roles.map((role) => {
     const inDeclared = role in declared;
     const inLive = role in live;
     const declaredWhen = declared[role] ?? null;
-    const liveWhen = live[role] ?? null;
-    return {
-      role,
-      inDeclared,
-      inLive,
-      declaredWhen,
-      liveWhen,
-      agrees: inDeclared && inLive && sameInstant(declaredWhen, liveWhen),
-    };
+    const liveEntry = live[role] ?? null;
+
+    let agrees = false;
+    if (inDeclared && inLive && liveEntry) {
+      if (!liveEntry.valid) {
+        agrees = false;
+      } else if (declaredWhen === null || liveEntry.starts_at === null) {
+        agrees = declaredWhen === null && liveEntry.starts_at === null;
+      } else {
+        agrees = Date.parse(declaredWhen) === Date.parse(liveEntry.starts_at);
+      }
+    }
+
+    return { role, inDeclared, inLive, declaredWhen, live: liveEntry, agrees };
   });
 }

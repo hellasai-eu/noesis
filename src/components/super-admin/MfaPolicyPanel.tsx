@@ -2,11 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ShieldAlert, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { declaredMfaPolicy, type MfaPolicyRow } from "@/deployment";
+import { declaredMfaPolicy } from "@/deployment";
 import {
+  declaredLabel,
   diffPolicies,
+  liveLabel,
   roleLabel,
-  whenLabel,
+  type LivePolicy,
 } from "@/lib/mfa-policy-drift";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,16 +34,22 @@ import { cn } from "@/lib/utils";
  *
  * The comparison itself lives in `@/lib/mfa-policy-drift`, so it can be tested
  * without a Supabase client; this file is the rendering.
+ *
+ * Note that nothing here decides whether a live date is usable.
+ * `mfa_policy_effective()` returns the database's own interpretation — valid,
+ * normalised instant, enforced-right-now — because only Postgres knows which
+ * literals it accepts, and a second opinion in JavaScript would be wrong in
+ * both directions.
  */
 
 export function MfaPolicyPanel() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["mfa-policy-effective"],
     staleTime: 60_000,
-    queryFn: async (): Promise<MfaPolicyRow | null> => {
+    queryFn: async (): Promise<LivePolicy | null> => {
       const { data: policy, error: rpcError } = await supabase.rpc("mfa_policy_effective");
       if (rpcError) throw rpcError;
-      return (policy as MfaPolicyRow | null) ?? null;
+      return (policy as unknown as LivePolicy | null) ?? null;
     },
   });
 
@@ -128,10 +136,10 @@ export function MfaPolicyPanel() {
                         row.agrees ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400",
                       )}
                     >
-                      {row.agrees
-                        ? whenLabel(row.liveWhen)
-                        : `live: ${row.inLive ? whenLabel(row.liveWhen) : "not enforced"} · build: ${
-                            row.inDeclared ? whenLabel(row.declaredWhen) : "not enforced"
+                      {row.agrees && row.live
+                        ? liveLabel(row.live)
+                        : `live: ${row.live ? liveLabel(row.live) : "not enforced"} · build: ${
+                            row.inDeclared ? declaredLabel(row.declaredWhen) : "not enforced"
                           }`}
                     </span>
                   </li>

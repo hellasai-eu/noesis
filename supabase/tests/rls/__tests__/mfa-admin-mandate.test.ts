@@ -355,6 +355,76 @@ describe('admin MFA mandate', () => {
     const { data: forSuper, error: superError } =
       await superClient.rpc('mfa_policy_effective');
     expect(superError).toBeNull();
-    expect(forSuper).toEqual(DEFAULT_POLICY);
+
+    // The interpretation, not the raw row: only Postgres knows which literals
+    // it accepts, so it reports that rather than leaving a client to guess.
+    expect(forSuper).toEqual({
+      super_admin: {
+        raw: null,
+        starts_at: null,
+        valid: true,
+        enforced_now: true,
+      },
+      admin: {
+        raw: DEADLINE,
+        starts_at: DEADLINE,
+        valid: true,
+        // 2026-11-01 is still ahead of the clock this suite runs on, which is
+        // the whole reason the default policy is safe to ship.
+        enforced_now: false,
+      },
+    });
+  }, 60_000);
+
+  it('reports a Postgres-valid date a strict ISO check would reject', async () => {
+    // `2026-12-01 00:00:00+00` is a perfectly good timestamptz. An earlier
+    // draft of the drift panel validated live values against the build's
+    // canonical ISO subset and labelled this "invalid — enforced immediately",
+    // which is a false alarm on the one screen used to diagnose a lockout.
+    await setPolicy(admin, { super_admin: null, admin: '2099-12-01 00:00:00+00' });
+    try {
+      const client = sessionClient();
+      const { error: signInError } = await client.auth.signInWithPassword({
+        email: superEmail,
+        password: PASSWORD,
+      });
+      expect(signInError).toBeNull();
+      await passChallenge(client, superSecret);
+
+      const { data } = await client.rpc('mfa_policy_effective');
+      const entry = (data as Record<string, Record<string, unknown>>).admin;
+      expect(entry.valid).toBe(true);
+      expect(entry.enforced_now).toBe(false);
+      // Normalised for the client, so it never parses the stored spelling.
+      expect(entry.starts_at).toBe('2099-12-01T00:00:00Z');
+      expect(entry.raw).toBe('2099-12-01 00:00:00+00');
+    } finally {
+      await setPolicy(admin, DEFAULT_POLICY);
+    }
+  }, 60_000);
+
+  it('reports a date Postgres cannot read as unreadable and enforced', async () => {
+    // The other direction, and the dangerous one: `2026-02-30` does not exist,
+    // Postgres refuses the cast, and `mfa_role_enforced_now` reads that as
+    // "enforce now". The panel must be told both facts.
+    await setPolicy(admin, { super_admin: null, admin: '2026-02-30T00:00:00Z' });
+    try {
+      const client = sessionClient();
+      const { error: signInError } = await client.auth.signInWithPassword({
+        email: superEmail,
+        password: PASSWORD,
+      });
+      expect(signInError).toBeNull();
+      await passChallenge(client, superSecret);
+
+      const { data } = await client.rpc('mfa_policy_effective');
+      const entry = (data as Record<string, Record<string, unknown>>).admin;
+      expect(entry.valid).toBe(false);
+      expect(entry.starts_at).toBeNull();
+      expect(entry.enforced_now).toBe(true);
+      expect(entry.raw).toBe('2026-02-30T00:00:00Z');
+    } finally {
+      await setPolicy(admin, DEFAULT_POLICY);
+    }
   }, 60_000);
 });

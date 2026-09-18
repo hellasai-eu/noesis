@@ -383,19 +383,77 @@ AS $$
   FROM me
 $$;
 
--- The live policy, for the operator's drift panel. Super-admins only: it is
--- not a secret worth much, but "which roles are gated" is reconnaissance, and
--- no ordinary user has a reason to read it.
+-- The live policy as the database *interprets* it, for the operator's drift
+-- panel. Super-admins only: it is not a secret worth much, but "which roles
+-- are gated" is reconnaissance, and no ordinary user has a reason to read it.
+--
+-- It returns the interpretation rather than the raw row on purpose. A client
+-- that received the raw text would have to decide for itself whether Postgres
+-- will accept each value, and it cannot: Postgres accepts a far wider range of
+-- timestamptz literals than any ISO subset a frontend would check for, while
+-- rejecting some that look fine to `Date.parse` (`2026-02-30` parses in
+-- JavaScript and does not exist here). Both mistakes are the same mistake, and
+-- both land on the screen an operator opens to find out why a role is locked
+-- out — one crying wolf about a valid deadline, the other hiding a lockout
+-- behind a date months away.
+--
+-- So each role reports:
+--   raw          the stored text, verbatim, for showing back a bad value
+--   starts_at    the same instant normalised, or null for "immediately"
+--   valid        false when Postgres cannot read `raw` as a timestamptz
+--   enforced_now what mfa_role_enforced_now() actually says right now
 CREATE OR REPLACE FUNCTION public.mfa_policy_effective()
 RETURNS jsonb
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE SECURITY DEFINER
 SET search_path = ''
 AS $$
-  SELECT CASE
-    WHEN public.is_super_admin((SELECT auth.uid())) THEN public.mfa_policy()
-    ELSE NULL
-  END
+DECLARE
+  policy jsonb;
+  result jsonb := '{}'::jsonb;
+  r text;
+  raw text;
+  parsed timestamptz;
+  is_valid boolean;
+BEGIN
+  IF NOT public.is_super_admin((SELECT auth.uid())) THEN
+    RETURN NULL;
+  END IF;
+
+  policy := public.mfa_policy();
+
+  FOR r IN SELECT jsonb_object_keys(policy) LOOP
+    IF jsonb_typeof(policy -> r) = 'null' THEN
+      raw := NULL;
+      parsed := NULL;
+      is_valid := true;
+    ELSE
+      raw := policy ->> r;
+      BEGIN
+        parsed := raw::timestamptz;
+        is_valid := true;
+      EXCEPTION WHEN OTHERS THEN
+        parsed := NULL;
+        is_valid := false;
+      END;
+    END IF;
+
+    result := result || jsonb_build_object(
+      r,
+      jsonb_build_object(
+        'raw', raw,
+        'starts_at',
+          CASE WHEN parsed IS NULL THEN NULL
+               ELSE to_char(parsed AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+          END,
+        'valid', is_valid,
+        'enforced_now', public.mfa_role_enforced_now(r)
+      )
+    );
+  END LOOP;
+
+  RETURN result;
+END
 $$;
 
 -- ── 6. Execute-privilege hygiene ────────────────────────────────────────────

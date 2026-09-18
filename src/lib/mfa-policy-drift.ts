@@ -89,20 +89,26 @@ export function declaredLabel(value: string | null): string {
 }
 
 /**
- * The same instant to the second.
+ * The same instant, exactly.
  *
- * Not to the millisecond, because the two sides cannot agree at that
- * precision: `validateSettings` permits a fractional-second deadline, and
- * `mfa_policy_effective` normalises its report with `to_char` to whole
- * seconds. Comparing exactly would report a deadline as drifting from itself.
+ * Both sides are safe to compare at full precision, and neither is an
+ * operator's raw literal:
  *
- * Rounding here rather than widening the SQL format keeps `mfa_user_deadline`
- * — whose value the enrolment nudge shows to every user — spelled the way an
- * operator wrote it. And sub-second precision in a date that decides when a
- * thousand pupils lose access is not a distinction worth preserving.
+ * - the declared value has passed `validateSettings`, so it is canonical ISO;
+ * - `starts_at` is produced by `mfa_policy_effective` with milliseconds, from
+ *   a value Postgres itself parsed.
+ *
+ * An earlier version rounded to the second, because the server used to report
+ * whole seconds and an exact comparison flagged a correctly applied
+ * fractional deadline as drift. Rounding fixed that and hid the opposite
+ * case: `.500Z` against `.900Z` read as agreement while Postgres enforced
+ * them 400ms apart. Reporting full precision from the server removes the
+ * trade entirely — which is the better fix, because the alternative on offer
+ * was to parse the raw literal in the browser, and that is the one thing this
+ * module must not do.
  */
-function sameSecond(a: string, b: string): boolean {
-  return Math.floor(Date.parse(a) / 1000) === Math.floor(Date.parse(b) / 1000);
+function sameInstant(a: string, b: string): boolean {
+  return Date.parse(a) === Date.parse(b);
 }
 
 export interface PolicyDiffRow {
@@ -141,7 +147,7 @@ export function diffPolicies(declared: MfaPolicyRow, live: LivePolicy): PolicyDi
       } else if (declaredWhen === null || liveEntry.starts_at === null) {
         agrees = declaredWhen === null && liveEntry.starts_at === null;
       } else {
-        agrees = sameSecond(declaredWhen, liveEntry.starts_at);
+        agrees = sameInstant(declaredWhen, liveEntry.starts_at);
       }
     }
 

@@ -442,9 +442,18 @@ BEGIN
       r,
       jsonb_build_object(
         'raw', raw,
+        -- Milliseconds included deliberately. The drift panel compares this
+        -- against the declared deadline, and `validateSettings` permits a
+        -- fractional-second one — so truncating here would either report a
+        -- correctly applied deadline as drift, or (if the client rounded to
+        -- compensate) hide a genuine sub-second difference. Reporting full
+        -- precision from the server lets the comparison be exact without the
+        -- client ever parsing an operator's raw literal, which is a thing it
+        -- cannot do reliably: Postgres accepts spellings `Date.parse` does
+        -- not, and normalises ones it reads differently.
         'starts_at',
           CASE WHEN parsed IS NULL THEN NULL
-               ELSE to_char(parsed AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+               ELSE to_char(parsed AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
           END,
         'valid', is_valid,
         'enforced_now', public.mfa_role_enforced_now(r)

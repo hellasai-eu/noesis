@@ -40,7 +40,7 @@ describe("liveLabel", () => {
     const label = liveLabel(
       live({
         raw: "2099-01-01T00:00:00Z",
-        starts_at: "2099-01-01T00:00:00Z",
+        starts_at: "2099-01-01T00:00:00.000Z",
         enforced_now: false,
       }),
     );
@@ -52,7 +52,7 @@ describe("liveLabel", () => {
     // `from` would read as "not yet" for a date the database is already
     // enforcing.
     const label = liveLabel(
-      live({ raw: "2020-01-01T00:00:00Z", starts_at: "2020-01-01T00:00:00Z" }),
+      live({ raw: "2020-01-01T00:00:00Z", starts_at: "2020-01-01T00:00:00.000Z" }),
     );
     expect(label).toMatch(/^since /);
   });
@@ -64,7 +64,7 @@ describe("liveLabel", () => {
     const label = liveLabel(
       live({
         raw: "2099-11-01 00:00:00+00",
-        starts_at: "2099-11-01T00:00:00Z",
+        starts_at: "2099-11-01T00:00:00.000Z",
         valid: true,
         enforced_now: false,
       }),
@@ -106,7 +106,7 @@ describe("diffPolicies", () => {
       {
         admin: live({
           raw: "2026-11-01T00:00:00Z",
-          starts_at: "2026-11-01T00:00:00Z",
+          starts_at: "2026-11-01T00:00:00.000Z",
           enforced_now: false,
         }),
         super_admin: live(),
@@ -125,7 +125,7 @@ describe("diffPolicies", () => {
       {
         admin: live({
           raw: "2026-11-01 00:00:00+00",
-          starts_at: "2026-11-01T00:00:00Z",
+          starts_at: "2026-11-01T00:00:00.000Z",
           enforced_now: false,
         }),
       },
@@ -134,16 +134,50 @@ describe("diffPolicies", () => {
   });
 
   it("does not report a fractional-second deadline as drifting from itself", () => {
-    // `validateSettings` permits fractional seconds, and
-    // `mfa_policy_effective` reports through `to_char` at whole-second
-    // precision — so an exact comparison flagged a correctly-applied deadline
-    // as drift, on the panel whose entire job is to show real drift.
+    // `validateSettings` permits fractional seconds, so the server reports
+    // `starts_at` with milliseconds. Truncating either side would flag a
+    // correctly-applied deadline as drift, on the panel whose entire job is
+    // to show real drift.
     const rows = diffPolicies(
       { admin: "2026-11-01T00:00:00.500Z" },
       {
         admin: live({
           raw: "2026-11-01T00:00:00.5+00",
-          starts_at: "2026-11-01T00:00:00Z",
+          starts_at: "2026-11-01T00:00:00.500Z",
+          enforced_now: false,
+        }),
+      },
+    );
+    expect(rows[0].agrees).toBe(true);
+  });
+
+  it("reports drift between deadlines that differ only in milliseconds", () => {
+    // The trap in the other direction: an earlier version rounded to the
+    // second to fix the case above, and so called these two equal while
+    // Postgres enforced them 400ms apart. Full precision from the server
+    // means neither side has to be blunted.
+    const rows = diffPolicies(
+      { admin: "2026-11-01T00:00:00.500Z" },
+      {
+        admin: live({
+          raw: "2026-11-01T00:00:00.9+00",
+          starts_at: "2026-11-01T00:00:00.900Z",
+          enforced_now: false,
+        }),
+      },
+    );
+    expect(rows[0].agrees).toBe(false);
+  });
+
+  it("treats a whole second and an explicit .000 as the same instant", () => {
+    // The server always emits milliseconds now, so the common case is a
+    // declared `...:00Z` against a reported `...:00.000Z`.
+    const rows = diffPolicies(
+      { admin: "2026-11-01T00:00:00Z" },
+      {
+        admin: live({
+          raw: "2026-11-01T00:00:00Z",
+          starts_at: "2026-11-01T00:00:00.000Z",
           enforced_now: false,
         }),
       },
@@ -152,13 +186,12 @@ describe("diffPolicies", () => {
   });
 
   it("still reports a genuine difference of seconds", () => {
-    // The rounding must not swallow a real disagreement.
     const rows = diffPolicies(
       { admin: "2026-11-01T00:00:00Z" },
       {
         admin: live({
           raw: "2026-11-01T00:00:01Z",
-          starts_at: "2026-11-01T00:00:01Z",
+          starts_at: "2026-11-01T00:00:01.000Z",
           enforced_now: false,
         }),
       },
@@ -203,14 +236,14 @@ describe("diffPolicies", () => {
       {
         admin: live({
           raw: "2027-01-01T00:00:00Z",
-          starts_at: "2027-01-01T00:00:00Z",
+          starts_at: "2027-01-01T00:00:00.000Z",
           enforced_now: false,
         }),
       },
     );
     expect(rows[0].agrees).toBe(false);
     expect(rows[0].declaredWhen).toBe("2026-11-01T00:00:00Z");
-    expect(rows[0].live?.starts_at).toBe("2027-01-01T00:00:00Z");
+    expect(rows[0].live?.starts_at).toBe("2027-01-01T00:00:00.000Z");
   });
 
   it("does not confuse a dateless role with a dated one", () => {
@@ -219,7 +252,7 @@ describe("diffPolicies", () => {
       {
         admin: live({
           raw: "2026-11-01T00:00:00Z",
-          starts_at: "2026-11-01T00:00:00Z",
+          starts_at: "2026-11-01T00:00:00.000Z",
           enforced_now: false,
         }),
       },

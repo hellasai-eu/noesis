@@ -367,7 +367,9 @@ describe('admin MFA mandate', () => {
       },
       admin: {
         raw: DEADLINE,
-        starts_at: DEADLINE,
+        // Reported with milliseconds so the drift panel can compare exactly
+        // without ever parsing the operator's own spelling.
+        starts_at: '2026-11-01T00:00:00.000Z',
         valid: true,
         // 2026-11-01 is still ahead of the clock this suite runs on, which is
         // the whole reason the default policy is safe to ship.
@@ -396,7 +398,7 @@ describe('admin MFA mandate', () => {
       expect(entry.valid).toBe(true);
       expect(entry.enforced_now).toBe(false);
       // Normalised for the client, so it never parses the stored spelling.
-      expect(entry.starts_at).toBe('2099-12-01T00:00:00Z');
+      expect(entry.starts_at).toBe('2099-12-01T00:00:00.000Z');
       expect(entry.raw).toBe('2099-12-01 00:00:00+00');
     } finally {
       await setPolicy(admin, DEFAULT_POLICY);

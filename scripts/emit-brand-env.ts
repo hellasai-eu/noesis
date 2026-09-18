@@ -37,12 +37,16 @@ let meta: Record<string, unknown>;
 try {
   meta = JSON.parse(readFileSync(metaFile, "utf8"));
 } catch (error) {
+  // Required, not optional: `brand.config.ts` imports this file, so an overlay
+  // without it does not build. Exiting 0 here would have let a deploy pipeline
+  // sail past a broken overlay and only fail later, at the bundler.
   const code = (error as { code?: string }).code;
   if (code === "ENOENT") {
     process.stderr.write(
-      `[brand] no ${metaFile}; nothing to derive. The edge functions will fall back to their defaults.\n`,
+      `[brand] ${metaFile} is missing. An overlay must contain it — its ` +
+        `brand.config.ts imports it. See deployment/README.md.\n`,
     );
-    process.exit(0);
+    process.exit(1);
   }
   process.stderr.write(
     `[brand] ${metaFile} is not valid JSON: ${(error as Error).message}\n`,

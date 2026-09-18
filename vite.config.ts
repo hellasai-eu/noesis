@@ -1,7 +1,7 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { componentTagger } from "lovable-tagger";
 import { execSync } from "child_process";
 
@@ -60,21 +60,37 @@ function validateDeploymentSettings(deploymentDir: string): Plugin {
   return {
     name: "validate-deployment-settings",
     buildStart() {
-      const file = path.join(deploymentDir, "settings.json");
-      let raw: unknown;
-      try {
-        raw = JSON.parse(readFileSync(file, "utf8"));
-      } catch (error) {
-        // No file means "use the defaults", which is a legitimate overlay.
-        if ((error as { code?: string }).code === "ENOENT") return;
-        this.error(`${file} is not valid JSON: ${(error as Error).message}`);
-        return;
+      // Both JSON files are required, not optional: the overlay's own
+      // `brand.config.ts` and `settings.config.ts` import them, so a missing
+      // or malformed one fails the build regardless — as an unresolved-import
+      // trace pointing at a line the operator did not write. Parsed here so
+      // the error names the file instead.
+      const parsed: Record<string, unknown> = {};
+      for (const name of ["brand.meta.json", "settings.json"]) {
+        const file = path.join(deploymentDir, name);
+        if (!existsSync(file)) {
+          this.error(
+            `${file} is missing. An overlay must contain it: its sibling ` +
+              `${name.replace(/\.meta\.json$|\.json$/, "")}.config.ts imports it, and the ` +
+              `build reads it directly. See deployment/README.md.`,
+          );
+          return;
+        }
+        try {
+          parsed[name] = JSON.parse(readFileSync(file, "utf8"));
+        } catch (error) {
+          this.error(`${file} is not valid JSON: ${(error as Error).message}`);
+          return;
+        }
       }
 
-      const problems = validateSettings(raw);
+      const problems = validateSettings(parsed["settings.json"]);
       if (problems.length > 0) {
         this.error(
-          [`${file} is not a usable policy:`, ...problems.map((p) => `  - ${p}`)].join("\n"),
+          [
+            `${path.join(deploymentDir, "settings.json")} is not a usable policy:`,
+            ...problems.map((p) => `  - ${p}`),
+          ].join("\n"),
         );
       }
     },

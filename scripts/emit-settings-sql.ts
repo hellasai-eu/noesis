@@ -56,18 +56,19 @@ let raw: unknown;
 try {
   raw = JSON.parse(readFileSync(settingsFile, "utf8"));
 } catch (error) {
-  // An overlay with no settings.json is valid — it means "use the defaults" —
-  // but a malformed one is a typo the operator needs to see, not something to
-  // silently paper over with a policy they did not choose.
+  // A missing settings.json is an error, not a shrug. An earlier version of
+  // this script reported "using the built-in defaults" and emitted a policy —
+  // but the overlay's own `settings.config.ts` imports the file, so the build
+  // would have failed anyway, and the operator would have been holding a
+  // statement generated from a policy they never wrote.
   const code = (error as { code?: string }).code;
   if (code === "ENOENT") {
-    process.stderr.write(
-      `[settings] no ${settingsFile}; using the built-in defaults\n`,
+    fail(
+      `[settings] ${settingsFile} is missing. An overlay must contain it — ` +
+        `its settings.config.ts imports it. See deployment/README.md.`,
     );
-    raw = {};
-  } else {
-    fail(`[settings] ${settingsFile} is not valid JSON: ${(error as Error).message}`);
   }
+  fail(`[settings] ${settingsFile} is not valid JSON: ${(error as Error).message}`);
 }
 
 const problems = validateSettings(raw);

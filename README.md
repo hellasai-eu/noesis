@@ -200,6 +200,13 @@ version page shows the declared policy against the live one.
 runtime, so the product name reaches emails and AI prompts as environment
 variables instead. Derive them from the overlay rather than retyping them:
 
+> **Upgrading an existing deployment: set these before or with the deploy.**
+> Until `BRAND_FROM_EMAIL` exists, the invitation functions and the contact
+> form return an error and the security notices skip silently — because
+> there is no address to send as, and mailing schools from a domain that is
+> not yours is worse than not mailing them. There is no safe fallback to
+> degrade to, so this is a required step rather than a recommended one.
+
 ```bash
 npm run brand:env                  # prints a `supabase secrets set …` line
 npm run brand:env -- --dotenv      # KEY=value, for supabase/.env.local

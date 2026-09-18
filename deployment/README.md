@@ -210,6 +210,22 @@ of these exist because forgetting the apply step is quiet:
    one, and says which roles disagree. The database is what counts, whatever
    the build says.
 
+### Upgrading an existing deployment
+
+Two steps are not optional on the deploy that first picks this up, and both
+fail in the quiet direction if skipped:
+
+1. **Apply the MFA policy** (`npm run settings:sql`). Without the
+   `mfa_policy` row the database falls back to enforcing privileged roles
+   immediately — which matches the previous behaviour, so nothing breaks, but
+   any policy you declared is not in force and the super-admin version page
+   will say so.
+2. **Set the `BRAND_*` secrets** (`npm run brand:env`). Until
+   `BRAND_FROM_EMAIL` exists the invitation functions and the contact form
+   return an error and the security notices skip. That is deliberate — there
+   is no honest address to send as — but it means email stops working until
+   the secrets are set, so set them with the deploy rather than after it.
+
 ### If the policy row is broken
 
 A missing or unparseable `mfa_policy` row falls back to

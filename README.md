@@ -1,14 +1,19 @@
 # Dianoisis
 
-The codebase for **Noesis**, an AI study platform for schools. (`dianoisis` is the
-repository and package name; *Noesis* is the name the product carries in its UI and
-in its legal texts.)
+The codebase for an AI study platform for schools. It carries no identity and
+no policy of its own — the name, the logo, the landing page at `/`, the legal
+documents at `/legal/*` and the two-factor-authentication mandate all come from
+a **deployment overlay** that the deploying repository supplies, so a clone is
+brandable and configurable rather than somebody else's product with the name
+and the security decisions baked in. See
+[`deployment/README.md`](deployment/README.md).
 
-Noesis turns a course's own material — the PDFs a teacher actually assigns — into
-practice questions, flashcards, chapter summaries, cheat sheets and guided study
-sessions, and keeps the teacher in charge of what reaches the class. It is built
-for institutions: a school gets its own portal, its own users, and data that is
-isolated from every other school's at the database level.
+The platform turns a course's own material — the PDFs a teacher actually
+assigns — into practice questions, flashcards, chapter summaries, cheat sheets
+and guided study sessions, and keeps the teacher in charge of what reaches the
+class. It is built for institutions: a school gets its own portal, its own
+users, and data that is isolated from every other school's at the database
+level.
 
 Licensed **AGPL-3.0-only** — see [License](#license), and note the network clause
 if you intend to run a modified copy as a service.
@@ -119,9 +124,104 @@ Seeded local accounts: `e2e-{student,instructor,admin,superadmin,evaluator}@test
 | `RESEND_API_KEY` | Invitations, contact form | resend.com |
 | `ELASTICSEARCH_URL` | *(Optional)* logging endpoint | your Elastic deployment |
 | `ELASTICSEARCH_API_KEY` | *(Optional)* logging key | your Elastic deployment |
+| `BRAND_*` | The product identity in emails and AI prompts | [Customization](#customization) |
 
 > `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_ANON_KEY` are injected
 > by Supabase locally and in hosted mode — do not set them yourself.
+
+## Customization
+
+Everything that makes a deployment *yours* — the name, the logo, the landing
+page, the legal documents, the two-factor policy — lives outside `src/` in a
+**deployment overlay**. Nothing in this repository hardcodes any of it, so a
+clone is brandable rather than somebody else's product with the name baked in.
+
+Point `DEPLOYMENT_DIR` at your own directory inside the checkout (copy it in as
+a build step; `/my-deployment/` and `/overlay/` are gitignored for this):
+
+```bash
+cp -R ../deploy-repo/overlay ./my-deployment
+DEPLOYMENT_DIR=./my-deployment npm run build
+```
+
+It applies to `dev`, `build` and `vitest` alike, and may also be set in `.env`.
+`deployment/` holds this repository's neutral defaults, and
+[`deployment/README.md`](deployment/README.md) is the full contract.
+
+### What you can change, and how it reaches production
+
+| What | Where you set it | How it takes effect |
+| --- | --- | --- |
+| Name, description, social tags | `brand.meta.json` | Build. Also written into `index.html` for crawlers |
+| Logo, icon | `brand.config.ts` | Build |
+| Landing page at `/` | `Landing.tsx` | Build |
+| Legal documents at `/legal/*` | `legal.config.ts` + `legal/*.md` | Build |
+| Two-factor policy per role | `settings.json` | **Build *and* an applied SQL statement** — see below |
+| Name in emails and AI prompts | `BRAND_*` Supabase secrets | Redeploy of the edge functions |
+
+The overlay's six files:
+
+```
+my-deployment/
+  brand.meta.json       name, description, canonical URL, social tags
+  brand.config.ts       the above plus the logo asset and icon
+  settings.json         which roles must use two-factor authentication
+  settings.config.ts    the above, type-checked
+  legal.config.ts       which legal documents are published, in what languages
+  legal/*.md            the documents themselves
+  Landing.tsx           the route element for /
+```
+
+Every field is optional — the `define*` helpers in
+[`src/deployment/contract.ts`](src/deployment/contract.ts) fill in the rest, and
+`tsc` checks your config against them.
+
+### Two things do not take effect from a build alone
+
+Most of the overlay is compiled into the bundle, so editing it and rebuilding
+is the whole story. Two are not, and both will bite quietly if skipped.
+
+**1. The two-factor policy is enforced in Postgres.** A restrictive RLS policy
+on every table reads `security_policies.mfa_policy`, so a setting that stayed
+in the bundle would gate the SPA and nothing else — anyone holding a JWT keeps
+their database access. Declare it in `settings.json`, then:
+
+```bash
+npm run settings:sql                        # print the UPDATE
+npm run settings:sql -- --check             # validate; exit 1 on a bad policy
+npm run --silent settings:sql | psql "$DATABASE_URL"
+```
+
+Three guards make a forgotten apply visible rather than silent: the build
+rejects a malformed policy, `--check` fails a pipeline, and the super-admin
+version page shows the declared policy against the live one.
+
+**2. Edge functions cannot read the overlay.** They are a separate Deno
+runtime, so the product name reaches emails and AI prompts as environment
+variables instead. Derive them from the overlay rather than retyping them:
+
+```bash
+npm run brand:env                  # prints a `supabase secrets set …` line
+npm run brand:env -- --dotenv      # KEY=value, for supabase/.env.local
+```
+
+| Variable | Unset behaviour |
+| --- | --- |
+| `BRAND_NAME` | Falls back to "Study Platform", as the frontend does |
+| `BRAND_FROM_EMAIL` | **No email is sent.** Notices skip; invitations error |
+| `BRAND_CONTACT_EMAIL` | The contact form is disabled |
+| `BRAND_APP_URL` | Security emails omit their sign-in button |
+| `BRAND_TAGLINE` | Email footers carry the copyright line alone |
+| `BRAND_TUTOR_NAME` | The AI tutor is called "<`BRAND_NAME`> Tutor" |
+
+`BRAND_FROM_EMAIL` is not derived by `brand:env` on purpose: a sending address
+needs a verified domain at your mail provider, which is a different decision
+from what the product is called. Unset means no mail rather than mail from
+somebody else's domain.
+
+`BRAND_APP_URL` is used for links in security emails and is deliberately never
+taken from the request's `Origin`, which a caller controls (#1232). When it is
+unset those emails drop the button rather than guess.
 
 ## Testing
 
@@ -150,9 +250,14 @@ workflow here holds a credential for a live environment.
   and what not to test against.
 - [`supabase/functions/AUTHORIZATION.md`](supabase/functions/AUTHORIZATION.md) —
   the edge-function authorization model and the status of every function.
-- [`docs/compliance/README.md`](docs/compliance/README.md) — the legal texts the
-  app serves at `/legal/*`. They are compiled into the bundle, so editing one
-  ships new legal text.
+- [`docs/compliance/README.md`](docs/compliance/README.md) — what this codebase
+  obliges an operator's legal documents to say, and what it does not publish
+  itself. The documents come from the deployment overlay and are compiled into
+  the bundle, so editing one ships new legal text.
+- [`deployment/README.md`](deployment/README.md#the-security-policy) — the
+  per-role two-factor mandate. It is enforced in Postgres rather than in the
+  bundle, so changing it is a declaration plus an applied `UPDATE`; the
+  super-admin version page shows the two side by side.
 
 Secret scanning and a dependency-vulnerability gate run against this repository.
 The dynamic scans — a weekly passive ZAP baseline and an adversarial (jailbreak)
@@ -164,10 +269,11 @@ and the archived run verdicts privately, and makes them available on request.
 
 ```
 src/                      React SPA — pages/, components/, hooks/, lib/, i18n/
+src/deployment/             the overlay contract, and the app's single read of it
+deployment/               default overlay — brand, settings, legal, Landing
 supabase/functions/       60 Deno edge functions + _shared/
 supabase/migrations/      354 SQL migrations (RLS on every table)
 supabase/tests/rls/       RLS policy tests
-docs/compliance/legal/    the legal texts served at /legal/*
 ```
 
 ## Continuous integration

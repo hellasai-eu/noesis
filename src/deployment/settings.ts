@@ -111,10 +111,6 @@ export const MFA_SETTINGS_DEFAULTS: MfaSettings = {
   deadlines: { admin: "2026-11-01T00:00:00Z" },
 };
 
-export const DEPLOYMENT_SETTINGS_DEFAULTS: DeploymentSettings = {
-  mfa: MFA_SETTINGS_DEFAULTS,
-};
-
 /**
  * Normalises an overlay's settings.
  *

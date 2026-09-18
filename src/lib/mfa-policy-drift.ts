@@ -88,6 +88,23 @@ export function declaredLabel(value: string | null): string {
   return `from ${formatUtcDate(value)}`;
 }
 
+/**
+ * The same instant to the second.
+ *
+ * Not to the millisecond, because the two sides cannot agree at that
+ * precision: `validateSettings` permits a fractional-second deadline, and
+ * `mfa_policy_effective` normalises its report with `to_char` to whole
+ * seconds. Comparing exactly would report a deadline as drifting from itself.
+ *
+ * Rounding here rather than widening the SQL format keeps `mfa_user_deadline`
+ * — whose value the enrolment nudge shows to every user — spelled the way an
+ * operator wrote it. And sub-second precision in a date that decides when a
+ * thousand pupils lose access is not a distinction worth preserving.
+ */
+function sameSecond(a: string, b: string): boolean {
+  return Math.floor(Date.parse(a) / 1000) === Math.floor(Date.parse(b) / 1000);
+}
+
 export interface PolicyDiffRow {
   role: string;
   inDeclared: boolean;
@@ -124,7 +141,7 @@ export function diffPolicies(declared: MfaPolicyRow, live: LivePolicy): PolicyDi
       } else if (declaredWhen === null || liveEntry.starts_at === null) {
         agrees = declaredWhen === null && liveEntry.starts_at === null;
       } else {
-        agrees = Date.parse(declaredWhen) === Date.parse(liveEntry.starts_at);
+        agrees = sameSecond(declaredWhen, liveEntry.starts_at);
       }
     }
 

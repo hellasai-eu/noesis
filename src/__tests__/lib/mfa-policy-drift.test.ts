@@ -133,6 +133,39 @@ describe("diffPolicies", () => {
     expect(rows[0].agrees).toBe(true);
   });
 
+  it("does not report a fractional-second deadline as drifting from itself", () => {
+    // `validateSettings` permits fractional seconds, and
+    // `mfa_policy_effective` reports through `to_char` at whole-second
+    // precision — so an exact comparison flagged a correctly-applied deadline
+    // as drift, on the panel whose entire job is to show real drift.
+    const rows = diffPolicies(
+      { admin: "2026-11-01T00:00:00.500Z" },
+      {
+        admin: live({
+          raw: "2026-11-01T00:00:00.5+00",
+          starts_at: "2026-11-01T00:00:00Z",
+          enforced_now: false,
+        }),
+      },
+    );
+    expect(rows[0].agrees).toBe(true);
+  });
+
+  it("still reports a genuine difference of seconds", () => {
+    // The rounding must not swallow a real disagreement.
+    const rows = diffPolicies(
+      { admin: "2026-11-01T00:00:00Z" },
+      {
+        admin: live({
+          raw: "2026-11-01T00:00:01Z",
+          starts_at: "2026-11-01T00:00:01Z",
+          enforced_now: false,
+        }),
+      },
+    );
+    expect(rows[0].agrees).toBe(false);
+  });
+
   it("never lets an unreadable live value agree with a declared one", () => {
     // The database is enforcing this role now; calling it agreement would
     // hide the one row that needs fixing.

@@ -4,7 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, LogOut, Loader2, ArrowLeft, GitCommit, Clock } from "lucide-react";
+import { LogOut, Loader2, ArrowLeft, GitCommit, Clock } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
+import { MfaPolicyPanel } from "@/components/super-admin/MfaPolicyPanel";
 
 const SuperAdminVersion = () => {
   const navigate = useNavigate();
@@ -81,17 +83,13 @@ const SuperAdminVersion = () => {
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="text-xl font-display font-bold text-foreground">Noesis</span>
+          <BrandMark
+            badge={
               <span className="ml-2 text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
                 Super Admin
               </span>
-            </div>
-          </div>
+            }
+          />
           <div className="flex items-center gap-4">
             <Link to="/super-admin">
               <Button variant="ghost" size="sm">
@@ -107,8 +105,8 @@ const SuperAdminVersion = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-6 py-8">
-        <h1 className="text-3xl font-display font-bold text-foreground mb-8">
+      <div className="container mx-auto px-6 py-8 space-y-6">
+        <h1 className="text-3xl font-display font-bold text-foreground">
           Version Info
         </h1>
 
@@ -130,6 +128,11 @@ const SuperAdminVersion = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* The build's declared security policy against the one the database
+            actually enforces. It lives here because this is already the page
+            that answers "what is deployed right now". */}
+        <MfaPolicyPanel />
       </div>
     </div>
   );

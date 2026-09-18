@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import { SiteFooter } from "@/components/SiteFooter";
 import { GlobalFooter } from "@/components/GlobalFooter";
-import { LEGAL_DOCUMENTS } from "@/content/legal";
+import { LEGAL_DOCUMENTS, legalPath } from "@/deployment";
 
 const at = (path: string, element: React.ReactNode) =>
   render(
@@ -21,7 +21,7 @@ describe("SiteFooter (#937)", () => {
 
     for (const doc of LEGAL_DOCUMENTS) {
       const link = screen.getByRole("link", { name: doc.label.en });
-      expect(link).toHaveAttribute("href", doc.path);
+      expect(link).toHaveAttribute("href", legalPath(doc.slug));
     }
     expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
   });
@@ -29,7 +29,7 @@ describe("SiteFooter (#937)", () => {
   it("takes its links from the compliance set rather than a second list", () => {
     at("/dashboard", <SiteFooter />);
 
-    // A document added to LEGAL_DOCUMENTS must appear here without anyone
+    // A document the deployment overlay adds must appear here without anyone
     // editing the footer — which is only true if the count matches.
     const nav = screen.getByRole("navigation", { name: "Legal" });
     expect(nav.querySelectorAll("a")).toHaveLength(LEGAL_DOCUMENTS.length + 1);

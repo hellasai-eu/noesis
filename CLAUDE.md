@@ -27,6 +27,16 @@ private deployment repository; nothing in this repository deploys anywhere.
 ### Build
 - `npm run build` — Production build
 - `npm run lint` — ESLint
+- `npm run settings:sql` — Emit the `UPDATE` that applies the deployment
+  overlay's MFA policy to `security_policies`. `-- --check` validates the
+  declaration and exits non-zero on a bad one (for a deploy pipeline);
+  `-- --json` prints just the policy. This repository cannot apply it — see
+  the overlay section below.
+- `npm run brand:env` — Emit the `supabase secrets set` line for the edge
+  functions' `BRAND_*` variables, derived from the overlay's
+  `brand.meta.json`. `-- --dotenv` prints `KEY=value` instead. Edge functions
+  cannot read the overlay, so this is what keeps the name in an invitation
+  email and the name in the page title from drifting apart.
 - Nothing here deploys. The deployment repository owns the Vercel build, the edge
   function workflow and the Supabase migration integration.
 
@@ -71,6 +81,82 @@ React 18 + TypeScript + Vite (frontend SPA) → Supabase (PostgreSQL + Auth + Ed
   ships in the frontend bundle and satisfies the gateway check, so it gates nothing.
 - **Migrations** (`supabase/migrations/`): Timestamped SQL files. All tables use RLS. Apply with `supabase db push` (remote) or `./scripts/sync_localdb.sh --run` (local)
 - **Types**: Auto-generated at `src/integrations/supabase/types.ts` — never edit manually, regenerate with `npm run gen:types`
+
+### Deployment overlay — no identity and no policy under `src/`
+This repository carries no name, logo, landing page, legal text or security
+policy of its own. All of it comes from a directory resolved through the
+`@deployment` alias, which points at `deployment/` (neutral in-repo defaults)
+unless `DEPLOYMENT_DIR` names another directory inside the checkout.
+`deployment/README.md` is the contract; `src/deployment/contract.ts` is the
+typed version of it.
+
+Consequences for anything you write here:
+
+- **Never hardcode a product name, a logo or a mailto address.** Read
+  `brand.name` etc. from `@/deployment`, and render the mark with
+  `<BrandMark>` / `<BrandLogo>` (`src/components/BrandMark.tsx`) rather than
+  rebuilding the tile-plus-glyph block — that block was copied into fourteen
+  navs, which is why the name was un-rebrandable in the first place. A test in
+  `src/__tests__/deployment/overlay.test.tsx` fails if a name reappears in the
+  chrome.
+- **There is no `src/pages/Index.tsx`.** `/` renders `@deployment/Landing`, and
+  is in `GlobalFooter`'s exclusion list, so an overlay's landing page owns its
+  own footer.
+- **`/legal/*` is registered only when the overlay publishes documents.** The
+  overlay's `legal.config.ts` is the single source for the router *and* the
+  footer; adding a second list is the bug it exists to prevent.
+- **The static document head is built from `brand.meta.json`**, read by
+  `vite.config.ts` before any module runs. Plain-data brand fields live in that
+  JSON — not in `brand.config.ts` — so the `<title>` a crawler sees and the
+  name the app renders cannot drift. Both normalise it through the same
+  `resolveBrandMeta`.
+- Tests resolve `@deployment` the same way the build does, so
+  `DEPLOYMENT_DIR=./my-deployment npm run test:frontend` exercises a deployment's own
+  overlay.
+
+### The MFA policy is the one setting that does not live in the bundle
+`deployment/settings.json` declares which roles must use two-factor auth, but
+**enforcement is in Postgres** — a restrictive RLS policy on every table calls
+`public.mfa_satisfied()`, which reads `security_policies.mfa_policy`. A
+setting that stayed in the bundle would gate the SPA and nothing else, since
+anyone with a JWT can query PostgREST directly.
+
+So there are rules about touching this:
+
+- **Never authorize on `settings` from `@/deployment`.** It is for copy and for
+  the super-admin drift panel. The frontend asks `mfa_enrollment_status()`
+  which gate to show, so the server stays the source of truth at run time.
+- **A policy change is two steps**: edit `settings.json`, then
+  `npm run settings:sql` and apply the statement from the deployment
+  repository. Three guards make a forgotten apply visible rather than silent —
+  the build rejects a malformed policy, `settings:sql -- --check` fails a
+  pipeline, and the super-admin version page shows declared against live.
+- **Enforcing a non-privileged role removes all database access** for
+  unenrolled users in it, because `mfa_satisfied()` backs the blanket
+  restrictive policy. That is what makes it real, and why a broad role wants a
+  deadline rather than immediate enforcement.
+- **A broken policy row fails closed to privileged roles only**
+  (`{"super_admin": null, "admin": null}`) — never to "enforce everyone",
+  which would lock out every pupil over a typo.
+- `supabase/tests/rls/__tests__/mfa-per-role-policy.test.ts` is the suite that
+  proves enforcement is real; it asserts loss of *table reads*, not the
+  presence of a dialog.
+
+### Edge functions get the brand from env, not from the overlay
+They are a separate Deno runtime with no access to `deployment/`, so
+`supabase/functions/_shared/brand.ts` reads `BRAND_*` (declared in
+`config.toml`). Never hardcode a product name, sender address or app URL in a
+function — and note the unset behaviour is load-bearing, not a degraded mode:
+
+- **No `BRAND_FROM_EMAIL` means no email.** Security notices warn and skip;
+  the invitation functions and the contact form return an error. Sending as
+  another deployment's domain is worse than not sending.
+- **No `BRAND_APP_URL` means no link.** Security emails drop the sign-in
+  button rather than fall back to the request's `Origin`, which a caller
+  controls (#1232). An operator-set env var is not request metadata, which is
+  why it is trusted there and `Origin` is not.
+- `npm run brand:env` derives these from the overlay; the frontend and backend
+  defaults are stated in two places by necessity, so keep them in step.
 
 ### Key data model
 - `institutions` → `classes` (grade_level + section_name) → `class_enrollments` (user ↔ class)

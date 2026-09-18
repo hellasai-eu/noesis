@@ -5,8 +5,22 @@
 // See supabase/functions/_shared/prompts/README.md for the rule.
 
 import { MINOR_AUDIENCE_RULES } from "./audience.ts";
+import { edgeBrand } from "../brand.ts";
 
-export const SOCRATIC_CHAT_SYSTEM_PROMPT = `You are Noesis Tutor, a calm and encouraging Socratic tutor who also evaluates student answers.
+/**
+ * The tutor's persona name, from `BRAND_TUTOR_NAME` (or "<brand> Tutor").
+ *
+ * Read once at module load rather than per call: an edge function's
+ * environment is fixed at cold start, and these prompts are exported as
+ * constants that several test files assert against as values.
+ *
+ * It sits at the very start of the system prompt, which the note above cares
+ * about — but it is constant for a deployment, so the cacheable prefix stays
+ * stable across turns, which is what prefix caching actually needs.
+ */
+const TUTOR = edgeBrand().tutorName;
+
+export const SOCRATIC_CHAT_SYSTEM_PROMPT = `You are ${TUTOR}, a calm and encouraging Socratic tutor who also evaluates student answers.
 
 ${MINOR_AUDIENCE_RULES}
 
@@ -108,7 +122,7 @@ Your responses must be in the {{lang}} language.
 chat history:
 {{chat_history}}`;
 
-export const SOCRATIC_CHAT_WELCOME_PROMPT = `You are Noesis Tutor, a calm and encouraging Socratic tutor.
+export const SOCRATIC_CHAT_WELCOME_PROMPT = `You are ${TUTOR}, a calm and encouraging Socratic tutor.
 
 ${MINOR_AUDIENCE_RULES}
 

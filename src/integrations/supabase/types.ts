@@ -5403,7 +5403,14 @@ export type Database = {
         Returns: string
       }
       mfa_enrollment_status: { Args: never; Returns: Json }
+      mfa_policy: { Args: never; Returns: Json }
+      mfa_policy_effective: { Args: never; Returns: Json }
+      mfa_role_enforced_now: { Args: { _role: string }; Returns: boolean }
+      mfa_role_in_policy: { Args: { _role: string }; Returns: boolean }
+      mfa_role_state: { Args: { _user_id: string }; Returns: string }
       mfa_satisfied: { Args: never; Returns: boolean }
+      mfa_user_deadline: { Args: { _user_id: string }; Returns: string }
+      mfa_user_roles: { Args: { _user_id: string }; Returns: string[] }
       move_study_guide_piece: {
         Args: { _direction: string; _piece_id: string }
         Returns: undefined

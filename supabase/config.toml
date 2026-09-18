@@ -239,3 +239,32 @@ verify_jwt = false
 OPENAI_API_KEY = "env(OPENAI_API_KEY)"
 RESEND_API_KEY = "env(RESEND_API_KEY)"
 CONVERT_API_KEY = "env(CONVERT_API_KEY)"
+
+# The product identity for edge functions — the backend half of the deployment
+# overlay (`_shared/brand.ts`). The frontend reads these from `deployment/` at
+# build time; edge functions are a separate runtime with no access to that
+# directory, so the same facts arrive here as environment variables.
+#
+# Generate the `supabase secrets set` line from the overlay itself with
+# `npm run brand:env`, so the name in an invitation email and the name in the
+# page title come from one file rather than two.
+#
+# Every one is optional, and the unset behaviour is deliberate rather than a
+# degraded mode to be tolerated:
+#   - BRAND_NAME        falls back to "Study Platform", matching the frontend.
+#   - BRAND_FROM_EMAIL  unset means NO EMAIL IS SENT. Security notices warn
+#                       and skip; the invitation functions return an error.
+#                       Sending as another deployment's domain would be worse.
+#   - BRAND_CONTACT_EMAIL  where the contact form delivers. Unset disables it.
+#   - BRAND_APP_URL     the deployed app's absolute URL. Security emails build
+#                       their sign-in link from it and drop the button when it
+#                       is unset — they never fall back to the request's
+#                       `Origin`, which a caller controls (#1232).
+#   - BRAND_TAGLINE     the line under the copyright in email footers.
+#   - BRAND_TUTOR_NAME  the AI tutor's persona name ("<BRAND_NAME> Tutor").
+BRAND_NAME = "env(BRAND_NAME)"
+BRAND_FROM_EMAIL = "env(BRAND_FROM_EMAIL)"
+BRAND_CONTACT_EMAIL = "env(BRAND_CONTACT_EMAIL)"
+BRAND_APP_URL = "env(BRAND_APP_URL)"
+BRAND_TAGLINE = "env(BRAND_TAGLINE)"
+BRAND_TUTOR_NAME = "env(BRAND_TUTOR_NAME)"

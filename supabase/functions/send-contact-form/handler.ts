@@ -1,4 +1,5 @@
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { edgeBrand } from "../_shared/brand.ts";
 import { logger } from "../_shared/logger.ts";
 
 const corsHeaders = {
@@ -115,22 +116,37 @@ export const handler = async (req: Request): Promise<Response> => {
     // Strip CR/LF to prevent SMTP header injection in the Subject line
     const headerSafeSubject = subject.replace(/[\r\n]+/g, " ");
 
+    const brand = edgeBrand();
+    if (!brand.from || !brand.contactRecipient) {
+      // Nothing to send as, or nowhere to send it. Accepting the message and
+      // silently dropping it would be worse than saying so: the sender is
+      // waiting for a reply that would never come.
+      logger.error("Contact form is not configured", {
+        hasFrom: Boolean(brand.from),
+        hasRecipient: Boolean(brand.contactRecipient),
+      });
+      return new Response(
+        JSON.stringify({ error: "Contact form is not configured for this deployment" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
     const endAdminTimer = logger.startTimer("send-admin-email");
     await resend.emails.send({
-      from: "Noesis <me@dianoisis.net>",
-      to: ["me@dianoisis.net"],
-      subject: `[Noesis Contact] ${headerSafeSubject}`,
+      from: brand.from,
+      to: [brand.contactRecipient],
+      subject: `[${brand.name} Contact] ${headerSafeSubject}`,
       html: `<h2>New Contact Form Submission</h2><p><strong>From:</strong> ${safeName} (${safeEmail})</p><p><strong>Subject:</strong> ${safeSubject}</p><p><strong>IP:</strong> ${escapeHtml(clientIP)}</p><hr /><h3>Message:</h3><p style="white-space: pre-wrap;">${safeMessage}</p>`
     });
     endAdminTimer();
 
     const endUserTimer = logger.startTimer("send-user-email");
     await resend.emails.send({
-      from: "Noesis <me@dianoisis.net>",
+      from: brand.from,
       to: [email],
-      subject: "We received your message - Noesis",
+      subject: `We received your message - ${brand.name}`,
       html: `<h2>Thank you for contacting us, ${safeName}!</h2><p>We have received your message and will get back to you as soon as possible.</p><hr /><p><strong>Your message:</strong></p><p style="white-space: pre-wrap; background: #f5f5f5; padding: 16px; border-radius: 8px;">${safeMessage}</p>`
     });
     endUserTimer();

@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
+import { resolveDeploymentDir } from './scripts/deployment-dir';
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -35,6 +37,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Resolved exactly as the build resolves it, so a deployment's suite
+      // exercises its own landing page and legal set rather than this
+      // repository's defaults.
+      '@deployment': resolveDeploymentDir(__dirname, 'test'),
     },
   },
 });

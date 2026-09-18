@@ -4,12 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import Legal, { LegalMarkdown } from "@/pages/Legal";
-import { LEGAL_DOCUMENTS } from "@/content/legal";
+import { LEGAL_DOCUMENTS, legalPath } from "@/deployment";
 
 /**
  * These pages are public by construction: nothing here mocks a Supabase client
  * or an auth context, because the page reads neither. If a future change makes
  * it need one, this file fails first — which is the point.
+ *
+ * The documents themselves come from the deployment overlay, so this file
+ * asserts the *viewer's* behaviour against whatever that overlay publishes —
+ * never against particular prose. A deployment pointing DEPLOYMENT_DIR at its
+ * own set runs these same tests over its own documents.
  */
 const renderAt = (path: string) =>
   render(
@@ -25,7 +30,7 @@ const renderAt = (path: string) =>
 describe("Legal pages (#937)", () => {
   it("renders every document at its own route, with no session", () => {
     for (const doc of LEGAL_DOCUMENTS) {
-      const { unmount } = renderAt(doc.path);
+      const { unmount } = renderAt(legalPath(doc.slug));
       const body = screen.getByTestId("legal-body");
       // The document's own H1 comes from the markdown, so a wired-up route
       // that rendered the wrong file would still pass a length check.
@@ -53,7 +58,7 @@ describe("Legal pages (#937)", () => {
 
   it("shows the DRAFT banner on every document, in both languages", async () => {
     for (const doc of LEGAL_DOCUMENTS) {
-      const { unmount } = renderAt(doc.path);
+      const { unmount } = renderAt(legalPath(doc.slug));
       expect(screen.getByTestId("legal-body")).toHaveTextContent(/ΠΡΟΣΧΕΔΙΟ/);
 
       await userEvent.click(screen.getByRole("button", { name: "English" }));
@@ -67,7 +72,8 @@ describe("Legal pages (#937)", () => {
 
     const body = screen.getByTestId("legal-body");
     // `[OPERATOR: …]` in running prose reads like a typo. It is real content in
-    // a draft, but it has to be visibly unfinished.
+    // a draft, but it has to be visibly unfinished. The shipped skeletons are
+    // made of these markers, so the default overlay exercises this for real.
     expect(body.textContent).not.toMatch(/\[OPERATOR:/);
     expect(body).toHaveTextContent(/TO BE COMPLETED/);
   });
@@ -131,7 +137,7 @@ describe("LegalMarkdown (#937)", () => {
     // text contains a backtick.
     const { container } = render(
       <LegalMarkdown
-        markdown={"**Noesis:** `[OPERATOR: registered legal entity]`"}
+        markdown={"**Operator:** `[OPERATOR: registered legal entity]`"}
         language="en"
       />,
     );

@@ -262,7 +262,6 @@ beforeEach(() => {
 
 // Pages without route params
 const simplePages = [
-  { name: 'Index', path: () => import('@/pages/Index') },
   { name: 'Auth', path: () => import('@/pages/Auth') },
   { name: 'Dashboard', path: () => import('@/pages/Dashboard') },
   { name: 'InstructorHome', path: () => import('@/pages/InstructorHome') },
@@ -360,24 +359,6 @@ describe('Page smoke tests', () => {
       renderPage(<mod.default />);
       const link = screen.getByText(/return to home/i);
       expect(link).toHaveAttribute('href', '/');
-    });
-  });
-
-  describe('Index interactions', () => {
-    it('displays the app name', async () => {
-      const mod = await import('@/pages/Index');
-      renderPage(<mod.default />);
-      const elements = screen.getAllByText('Noesis');
-      expect(elements.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('has sign in and get started buttons', async () => {
-      const mod = await import('@/pages/Index');
-      renderPage(<mod.default />);
-      const signInElements = screen.getAllByText('Sign In');
-      expect(signInElements.length).toBeGreaterThanOrEqual(1);
-      const getStartedElements = screen.getAllByText('Get Started');
-      expect(getStartedElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 

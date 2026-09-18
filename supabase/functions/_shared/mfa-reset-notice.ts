@@ -12,6 +12,7 @@
 
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logger } from "./logger.ts";
+import { edgeBrand, emailFooterText, monogram } from "./brand.ts";
 
 export interface MfaResetNotice {
   /** Recipient — the account whose MFA was removed, never the actor. */
@@ -19,15 +20,6 @@ export interface MfaResetNotice {
   /** For the greeting. Omitted when unknown; the copy degrades gracefully. */
   fullName?: string | null;
 }
-
-const FROM = "Noesis <me@dianoisis.net>";
-
-/**
- * Hard-coded, NOT derived from the request's `Origin` — same reasoning as
- * `password-change-notice.ts` (#1232): this is a security email whose
- * recipient is not the caller, so no request metadata may choose its link.
- */
-const SIGN_IN_LINK = "https://dianoisis.net/auth";
 
 const escapeHtml = (value: string) =>
   value
@@ -37,7 +29,39 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-const generateEmailHtml = (greetingName: string | null, signInLink: string) => `
+/**
+ * The sender, the wordmark and the sign-in link all come from `BRAND_*`
+ * environment variables (see `_shared/brand.ts`).
+ *
+ * The link is still NOT derived from the request's `Origin` — same reasoning
+ * as `password-change-notice.ts` (#1232): this is a security email whose
+ * recipient is often not the caller, so no request metadata may choose where
+ * it points. An operator-set environment variable is not request metadata,
+ * which is why it is safe here where `Origin` is not.
+ *
+ * `signInLink` is nullable, and a null one drops the button rather than
+ * rendering a dead one: the email's job — telling someone their second factor
+ * was removed — does not depend on it.
+ */
+const generateEmailHtml = (
+  greetingName: string | null,
+  signInLink: string | null,
+  brandName: string,
+  footer: string,
+) => {
+  const button = signInLink
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${escapeHtml(signInLink)}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 14px 40px; border-radius: 10px; font-weight: 700; font-size: 16px;">
+                      Go to ${escapeHtml(brandName)} &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>`
+    : "";
+
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,9 +78,9 @@ const generateEmailHtml = (greetingName: string | null, signInLink: string) => `
           <tr>
             <td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); padding: 40px; text-align: center;">
               <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%); border-radius: 16px; margin: 0 auto 20px;">
-                <span style="font-size: 32px; color: #1a1a2e; font-weight: bold; line-height: 64px;">&nu;</span>
+                <span style="font-size: 32px; color: #1a1a2e; font-weight: bold; line-height: 64px;">${escapeHtml(monogram(brandName))}</span>
               </div>
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Noesis</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">${escapeHtml(brandName)}</h1>
               <p style="color: #a0a0b0; margin: 8px 0 0; font-size: 14px;">Security notification</p>
             </td>
           </tr>
@@ -69,7 +93,8 @@ const generateEmailHtml = (greetingName: string | null, signInLink: string) => `
               </h2>
               <p style="color: #4b5563; margin: 0 0 24px; font-size: 16px; line-height: 1.6;">
                 Two-factor authentication was removed from your account. An administrator at your
-                institution removed the authenticator-app requirement from your Noesis account.
+                institution removed the authenticator-app requirement from your
+                ${escapeHtml(brandName)} account.
                 You can now sign in with just your password, and you were signed out of any active
                 sessions. You can re-enable two-factor authentication from your account settings
                 at any time.
@@ -81,19 +106,11 @@ const generateEmailHtml = (greetingName: string | null, signInLink: string) => `
                 </p>
               </div>
 
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td align="center">
-                    <a href="${escapeHtml(signInLink)}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 14px 40px; border-radius: 10px; font-weight: 700; font-size: 16px;">
-                      Go to Noesis &rarr;
-                    </a>
-                  </td>
-                </tr>
-              </table>
+              ${button}
 
               <p style="color: #9ca3af; margin: 28px 0 0; font-size: 13px; text-align: center; line-height: 1.6;">
                 For your security this message contains no account details.
-                Noesis will never ask you for your password by email.
+                ${escapeHtml(brandName)} will never ask you for your password by email.
               </p>
             </td>
           </tr>
@@ -102,7 +119,7 @@ const generateEmailHtml = (greetingName: string | null, signInLink: string) => `
           <tr>
             <td style="background: #f8f9fa; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-                &copy; ${new Date().getFullYear()} Noesis. Empowering education with AI.
+                ${escapeHtml(footer)}
               </p>
             </td>
           </tr>
@@ -114,6 +131,7 @@ const generateEmailHtml = (greetingName: string | null, signInLink: string) => `
 </body>
 </html>
 `;
+};
 
 /**
  * Send the notice. Resolves `true` only when Resend accepted the message.
@@ -128,6 +146,15 @@ export async function sendMfaResetNotice(notice: MfaResetNotice): Promise<boolea
       return false;
     }
 
+    const brand = edgeBrand();
+    if (!brand.from) {
+      // No verified sending address configured. Mailing people from another
+      // deployment's domain is worse than not mailing them, and the caller
+      // records this outcome in the audit row either way.
+      logger.warn("BRAND_FROM_EMAIL not configured, skipping MFA reset notice");
+      return false;
+    }
+
     if (!notice.email) {
       logger.warn("No recipient address for MFA reset notice");
       return false;
@@ -136,10 +163,15 @@ export async function sendMfaResetNotice(notice: MfaResetNotice): Promise<boolea
     const resend = new Resend(apiKey);
     const endTimer = logger.startTimer("mfa-reset-notice-email");
     const response = await resend.emails.send({
-      from: FROM,
+      from: brand.from,
       to: [notice.email],
-      subject: "Two-factor authentication was removed from your Noesis account",
-      html: generateEmailHtml(notice.fullName ?? null, SIGN_IN_LINK),
+      subject: `Two-factor authentication was removed from your ${brand.name} account`,
+      html: generateEmailHtml(
+        notice.fullName ?? null,
+        brand.signInUrl,
+        brand.name,
+        emailFooterText(brand),
+      ),
     });
     endTimer();
 

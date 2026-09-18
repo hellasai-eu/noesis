@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logger } from "../_shared/logger.ts";
 import { recordAudit } from "../_shared/audit.ts";
+import { edgeBrand, emailFooterText, monogram } from "../_shared/brand.ts";
 import {
   AAL2_REQUIRED_CODE,
   AAL2_REQUIRED_MESSAGE,
@@ -27,11 +28,30 @@ interface InvitationRequest {
   inviterName: string;
 }
 
+/**
+ * Every interpolated value here is escaped.
+ *
+ * `inviterName` and `institutionName` are operator- and user-supplied strings
+ * that reach this template unmodified, so raw interpolation let a name
+ * containing markup rewrite the email — the sibling `bulk-invite-users`
+ * template has escaped them all along, and this one did not.
+ */
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const generateEmailHtml = (
   invitedName: string | undefined,
   inviterName: string,
   institutionName: string,
-  inviteLink: string
+  inviteLink: string,
+  brandName: string,
+  brandTagline: string | null,
+  footer: string,
 ) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -49,10 +69,14 @@ const generateEmailHtml = (
           <tr>
             <td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); padding: 48px 40px; text-align: center;">
               <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%); border-radius: 16px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 32px; color: #1a1a2e; font-weight: bold;">ν</span>
+                <span style="font-size: 32px; color: #1a1a2e; font-weight: bold;">${escapeHtml(monogram(brandName))}</span>
               </div>
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Noesis</h1>
-              <p style="color: #a0a0b0; margin: 8px 0 0; font-size: 14px;">AI-Powered Learning Platform</p>
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">${escapeHtml(brandName)}</h1>
+              ${
+  brandTagline
+    ? `<p style="color: #a0a0b0; margin: 8px 0 0; font-size: 14px;">${escapeHtml(brandTagline)}</p>`
+    : ""
+}
             </td>
           </tr>
 
@@ -60,7 +84,7 @@ const generateEmailHtml = (
           <tr>
             <td style="padding: 48px 40px;">
               <h2 style="color: #1a1a2e; margin: 0 0 8px; font-size: 24px; font-weight: 600;">
-                ${invitedName ? `Hello ${invitedName}! 👋` : "You're Invited! 🎉"}
+                ${invitedName ? `Hello ${escapeHtml(invitedName)}! 👋` : "You're Invited! 🎉"}
               </h2>
               <p style="color: #6b7280; margin: 0 0 32px; font-size: 16px; line-height: 1.6;">
                 Great news! You've been invited to join a learning community.
@@ -69,16 +93,16 @@ const generateEmailHtml = (
               <!-- Invitation Card -->
               <div style="background: linear-gradient(135deg, #f8f9fa 0%, #f1f5f9 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; border-left: 4px solid #d4af37;">
                 <p style="color: #6b7280; margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Invited by</p>
-                <p style="color: #1a1a2e; margin: 0 0 16px; font-size: 18px; font-weight: 600;">${inviterName}</p>
+                <p style="color: #1a1a2e; margin: 0 0 16px; font-size: 18px; font-weight: 600;">${escapeHtml(inviterName)}</p>
                 <p style="color: #6b7280; margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Institution</p>
-                <p style="color: #1a1a2e; margin: 0; font-size: 18px; font-weight: 600;">${institutionName}</p>
+                <p style="color: #1a1a2e; margin: 0; font-size: 18px; font-weight: 600;">${escapeHtml(institutionName)}</p>
               </div>
 
               <!-- CTA Button -->
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td align="center">
-                    <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 16px 48px; border-radius: 10px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4); transition: transform 0.2s;">
+                    <a href="${escapeHtml(inviteLink)}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 16px 48px; border-radius: 10px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4); transition: transform 0.2s;">
                       Accept Invitation →
                     </a>
                   </td>
@@ -122,7 +146,7 @@ const generateEmailHtml = (
           <tr>
             <td style="background: #f8f9fa; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-                © ${new Date().getFullYear()} Noesis. Empowering education with AI.
+                ${escapeHtml(footer)}
               </p>
             </td>
           </tr>
@@ -215,17 +239,49 @@ export const handler = async (req: Request): Promise<Response> => {
     const actorEmail: string | null = callerUser.email ?? null;
     const actorAuthorized = true;
 
-    const baseUrl = req.headers.get("origin") || "https://dianoisis.net";
+    const brand = edgeBrand();
+    if (!brand.from) {
+      // Unlike the best-effort security notices, an invitation that is not
+      // delivered is the whole operation failing — so this is an error the
+      // caller sees, not a warning in a log.
+      logger.error("BRAND_FROM_EMAIL is not configured; cannot send invitations");
+      return json(
+        { error: "Email sending is not configured for this deployment" },
+        500,
+      );
+    }
+
+    // `Origin` is preferred so an invitation opens on the host the admin is
+    // actually using (a deployment may serve several), and BRAND_APP_URL is
+    // the fallback for a direct call with no Origin. Unlike the security
+    // notices, this link is not a credential path and the recipient is the
+    // person the caller chose to invite either way.
+    const baseUrl = req.headers.get("origin") || brand.appUrl;
+    if (!baseUrl) {
+      logger.error("No Origin header and BRAND_APP_URL is not configured");
+      return json(
+        { error: "Application URL is not configured for this deployment" },
+        500,
+      );
+    }
     const inviteLink = `${baseUrl}/auth?invitation=${institutionId}&email=${encodeURIComponent(email)}`;
 
-    const emailHtml = generateEmailHtml(invitedName, inviterName, institutionName, inviteLink);
+    const emailHtml = generateEmailHtml(
+      invitedName,
+      inviterName,
+      institutionName,
+      inviteLink,
+      brand.name,
+      brand.tagline,
+      emailFooterText(brand),
+    );
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     const endEmailTimer = logger.startTimer("send-invitation-email");
     const emailResponse = await resend.emails.send({
-      from: "Noesis <me@dianoisis.net>",
+      from: brand.from,
       to: [email],
-      subject: `${inviterName} invited you to join ${institutionName} on Noesis`,
+      subject: `${inviterName} invited you to join ${institutionName} on ${brand.name}`,
       html: emailHtml,
     });
     endEmailTimer();

@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { logger } from "../_shared/logger.ts";
+import { edgeBrand, emailFooterText, monogram } from "../_shared/brand.ts";
 import { resolveOrCreateGradeLevel } from "../_shared/grade-levels.ts";
 import { recordAudit } from "../_shared/audit.ts";
 import {
@@ -54,6 +55,9 @@ const generateEmailHtml = (
   inviterName: string,
   institutionName: string,
   inviteLink: string,
+  brandName: string,
+  brandTagline: string | null,
+  footer: string,
 ) => {
   const safeName = invitedName ? escapeHtml(invitedName) : undefined;
   const safeInviter = escapeHtml(inviterName);
@@ -68,10 +72,14 @@ const generateEmailHtml = (
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
         <tr><td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); padding: 48px 40px; text-align: center;">
           <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%); border-radius: 16px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-            <span style="font-size: 32px; color: #1a1a2e; font-weight: bold;">ν</span>
+            <span style="font-size: 32px; color: #1a1a2e; font-weight: bold;">${escapeHtml(monogram(brandName))}</span>
           </div>
-          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Noesis</h1>
-          <p style="color: #a0a0b0; margin: 8px 0 0; font-size: 14px;">AI-Powered Learning Platform</p>
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">${escapeHtml(brandName)}</h1>
+          ${
+  brandTagline
+    ? `<p style="color: #a0a0b0; margin: 8px 0 0; font-size: 14px;">${escapeHtml(brandTagline)}</p>`
+    : ""
+}
         </td></tr>
         <tr><td style="padding: 48px 40px;">
           <h2 style="color: #1a1a2e; margin: 0 0 8px; font-size: 24px; font-weight: 600;">
@@ -87,13 +95,13 @@ const generateEmailHtml = (
             <p style="color: #1a1a2e; margin: 0; font-size: 18px; font-weight: 600;">${safeInstitution}</p>
           </div>
           <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center">
-            <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 16px 48px; border-radius: 10px; font-weight: 700; font-size: 16px;">
+            <a href="${escapeHtml(inviteLink)}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%); color: #1a1a2e; text-decoration: none; padding: 16px 48px; border-radius: 10px; font-weight: 700; font-size: 16px;">
               Accept Invitation
             </a>
           </td></tr></table>
         </td></tr>
         <tr><td style="background: #f8f9fa; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="color: #9ca3af; margin: 0; font-size: 12px;">© ${new Date().getFullYear()} Noesis. Empowering education with AI.</p>
+          <p style="color: #9ca3af; margin: 0; font-size: 12px;">${escapeHtml(footer)}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -311,9 +319,17 @@ export const handler = async (req: Request): Promise<Response> => {
       if (inv.email) existingInviteEmails.add(inv.email.toLowerCase());
     }
 
+    const brand = edgeBrand();
     const resendKey = Deno.env.get("RESEND_API_KEY");
-    const resend = resendKey ? new Resend(resendKey) : null;
-    const baseUrl = req.headers.get("origin") || "https://dianoisis.net";
+    // Sending is best-effort here (the invitation row is created either way),
+    // so a deployment with no sending address configured behaves exactly like
+    // one with no Resend key: rows created, no mail, nothing pretending
+    // otherwise.
+    const resend = resendKey && brand.from ? new Resend(resendKey) : null;
+    if (resendKey && !brand.from) {
+      logger.warn("BRAND_FROM_EMAIL not configured; creating invitations without email");
+    }
+    const baseUrl = req.headers.get("origin") || brand.appUrl;
 
     const results: RowResult[] = [];
 
@@ -398,14 +414,22 @@ export const handler = async (req: Request): Promise<Response> => {
       }
 
       // Send email via Resend (best-effort — invitation is still created)
-      if (resend) {
+      if (resend && baseUrl && brand.from) {
         try {
           const inviteLink = `${baseUrl}/auth?invitation=${invitation.id}&email=${encodeURIComponent(email)}`;
-          const html = generateEmailHtml(invitedName ?? undefined, inviterName, institutionName, inviteLink);
+          const html = generateEmailHtml(
+            invitedName ?? undefined,
+            inviterName,
+            institutionName,
+            inviteLink,
+            brand.name,
+            brand.tagline,
+            emailFooterText(brand),
+          );
           await resend.emails.send({
-            from: "Noesis <me@dianoisis.net>",
+            from: brand.from,
             to: [email],
-            subject: `${inviterName} invited you to join ${institutionName} on Noesis`,
+            subject: `${inviterName} invited you to join ${institutionName} on ${brand.name}`,
             html,
           });
         } catch (emailErr) {

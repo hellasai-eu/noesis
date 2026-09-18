@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  BookOpen,
   BookOpenCheck,
   Bot,
   FileQuestion,
@@ -45,6 +44,7 @@ import { CourseSetupCard } from "@/components/instructor/home/CourseSetupCard";
 import { QuickAction } from "@/components/instructor/home/QuickAction";
 import { clearSelectedInstitutionId } from "@/lib/selected-institution";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/BrandMark";
 
 /**
  * The instructor's landing page (#redmenta-style): not a menu of admin
@@ -153,15 +153,7 @@ const InstructorHome = () => {
       <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between gap-2 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <BookOpen className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="font-display text-xl font-bold text-foreground">Noesis</span>
-              {institutionQuery.data && (
-                <p className="text-xs text-muted-foreground">{institutionQuery.data.name}</p>
-              )}
-            </div>
+            <BrandMark subtitle={institutionQuery.data?.name} />
             <span className="ml-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400">
               Instructor
             </span>

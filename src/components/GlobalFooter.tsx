@@ -24,7 +24,10 @@ import { SiteFooter } from "@/components/SiteFooter";
  */
 
 const ROUTES_WITH_THEIR_OWN_FOOTER = [
-  /^\/$/, // landing page — keeps its brand-dark band
+  // `/` is the deployment overlay's landing page, so it owns its own footer —
+  // `<SiteFooter tone="brand" />` if it wants the dark band, none if it does
+  // not. The default overlay redirects to `/auth` and needs neither.
+  /^\/$/,
   /^\/legal(\/|$)/, // legal pages — their own flex column
   /^\/student\/?$/, // student dashboard
   // The course surface wears the same `SurfaceShell` as the dashboard, footer

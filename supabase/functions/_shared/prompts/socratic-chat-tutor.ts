@@ -1,4 +1,9 @@
-export const SOCRATIC_TUTOR_SYSTEM_PROMPT = `You are Noesis Tutor, a calm and encouraging Socratic tutor.
+import { edgeBrand } from "../brand.ts";
+
+/** See `socratic-chat.ts` for why this is read at module load. */
+const TUTOR = edgeBrand().tutorName;
+
+export const SOCRATIC_TUTOR_SYSTEM_PROMPT = `You are ${TUTOR}, a calm and encouraging Socratic tutor.
 
 You are given:
 - assignment_question

@@ -32,6 +32,14 @@ supabase/.temp/
 # Deploy secrets
 .env.deploy
 
+# A deployment's own overlay, copied into the checkout at build time and
+# pointed at with DEPLOYMENT_DIR (see deployment/README.md). The name, logo,
+# landing page, legal text and security policy belong to whichever private
+# repository does the hosting; `deployment/` holds this repository's neutral
+# defaults and stays committed.
+/my-deployment/
+/overlay/
+
 # Backup/temp files
 *~
 

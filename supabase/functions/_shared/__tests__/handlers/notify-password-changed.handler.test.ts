@@ -1,6 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import {
   createTestHarness,
+  DEFAULT_ENV,
   FetchLogEntry,
   MockRoute,
   parseResponse,
@@ -130,17 +131,39 @@ Deno.test("notify-password-changed: the notice goes to the caller's own address"
 Deno.test("notify-password-changed: a forged Origin cannot steer the email's link", async () => {
   // `Origin` is honest only from a browser; a direct HTTP call sets it to
   // anything. This is a security email, the message a user is most primed to
-  // click, so its button is a constant rather than request metadata.
+  // click, so its button comes from the deployment's own BRAND_APP_URL rather
+  // than from request metadata.
   const h = createTestHarness({ routes: HAPPY_ROUTES });
   try {
     await h.invoke(handler, {}, {
-      headers: { ...AUTH, Origin: "https://noesis-phishing.test" },
+      headers: { ...AUTH, Origin: "https://phishing.test" },
     });
 
     const emailCall = h.fetchLog.find((c) => c.url.includes("api.resend.com"));
     const html = String(JSON.parse(String(emailCall?.body ?? "{}")).html ?? "");
-    assertEquals(html.includes("noesis-phishing.test"), false);
-    assertEquals(html.includes("https://dianoisis.net/auth"), true);
+    assertEquals(html.includes("phishing.test"), false);
+    assertEquals(html.includes(`${DEFAULT_ENV.BRAND_APP_URL}/auth`), true);
+  } finally {
+    h.cleanup();
+  }
+});
+
+Deno.test("notify-password-changed: no BRAND_APP_URL means no button, not a guess", async () => {
+  // A deployment that has not configured its URL must not get a link built
+  // from the request — the email is still worth sending without a button.
+  const h = createTestHarness({
+    routes: HAPPY_ROUTES,
+    envVars: { BRAND_APP_URL: "" },
+  });
+  try {
+    await h.invoke(handler, {}, {
+      headers: { ...AUTH, Origin: "https://phishing.test" },
+    });
+
+    const emailCall = h.fetchLog.find((c) => c.url.includes("api.resend.com"));
+    const html = String(JSON.parse(String(emailCall?.body ?? "{}")).html ?? "");
+    assertEquals(html.includes("phishing.test"), false);
+    assertEquals(html.includes("/auth"), false);
   } finally {
     h.cleanup();
   }

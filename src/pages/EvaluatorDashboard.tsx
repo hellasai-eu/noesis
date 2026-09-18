@@ -43,6 +43,7 @@ import {
   Users,
 } from "lucide-react";
 import { setSelectedInstitutionId } from "@/lib/selected-institution";
+import { BrandMark } from "@/components/BrandMark";
 
 interface Course {
   id: string;
@@ -189,10 +190,14 @@ const EvaluatorDashboard = () => {
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-              <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
-            </div>
-            <span className="hidden xs:inline text-lg sm:text-xl font-display font-bold text-foreground">Noesis</span>
+            {/* The clipboard says which surface you are on; the mark and name
+                are still the product's. */}
+            <BrandMark
+              size="responsive"
+              icon={ClipboardCheck}
+              nameClassName="hidden xs:inline"
+              className="gap-2 sm:gap-3"
+            />
             <Badge variant="outline" className="ml-1 text-xs">
               {t("roleLabel")}
             </Badge>

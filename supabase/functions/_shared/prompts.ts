@@ -1,5 +1,5 @@
 /**
- * Centralized AI Prompts for Noesis Education Platform
+ * Centralized AI Prompts for the education platform
  *
  * This file contains shared formatting instructions used across the platform.
  * Most prompts are now managed via OpenAI Saved Prompts.

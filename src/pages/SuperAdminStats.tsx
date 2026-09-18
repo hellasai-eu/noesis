@@ -14,7 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  BookOpen,
   LogOut,
   Loader2,
   Building,
@@ -28,6 +27,7 @@ import {
   Globe,
 } from "lucide-react";
 import { format } from "date-fns";
+import { BrandMark } from "@/components/BrandMark";
 
 interface InstitutionStats {
   id: string;
@@ -279,17 +279,13 @@ const SuperAdminStats = () => {
       {/* Navigation */}
       <nav className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="text-xl font-display font-bold text-foreground">Noesis</span>
+          <BrandMark
+            badge={
               <span className="ml-2 text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
                 Super Admin
               </span>
-            </div>
-          </div>
+            }
+          />
           <div className="flex items-center gap-4">
             <Link to="/super-admin">
               <Button variant="ghost" size="sm">

@@ -81,7 +81,7 @@ jobs:
       # esm.sh) across runs so a green run isn't at the mercy of esm.sh being
       # reachable. Keyed on deno.lock so it invalidates when deps change.
       - name: Cache Deno dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/deno
           key: deno-${{ runner.os }}-${{ hashFiles('deno.lock') }}

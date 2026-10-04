@@ -16,7 +16,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "./logger.ts";
 
 /** Documented set of auditable actions — keep in sync with the CHECK on
- * `audit_logs.action` in migration 20260725064858_audit_logs.sql. */
+ * `audit_logs.action` (latest: 20261004120000_audit_institution_role_changes.sql). */
 export type AuditAction =
   | "user.create"
   | "user.delete"
@@ -26,6 +26,13 @@ export type AuditAction =
   | "user.password_changed"
   /** An admin removed a user's MFA factors. */
   | "user.mfa_reset"
+  /** A member's institution role was granted, changed or revoked. Written by
+   * the `audit_user_institution_change` trigger, not by this helper — role
+   * changes go straight from the browser to `user_institutions`. */
+  | "user.role_change"
+  /** A member was suspended / reactivated in an institution (same trigger). */
+  | "user.suspend"
+  | "user.reactivate"
   | "user.bulk_invite"
   | "user.invite"
   | "data.export"
